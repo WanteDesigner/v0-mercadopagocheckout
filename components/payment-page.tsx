@@ -4,15 +4,15 @@ import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Copy, Clock, ArrowLeft, CheckCircle } from "lucide-react"
+import { Copy, Clock, ArrowLeft, CheckCircle, Lock } from "lucide-react"
 
 export default function PaymentPage() {
   const searchParams = useSearchParams()
   const [timeLeft, setTimeLeft] = useState(600) // 10 minutos
   const [isVerifying, setIsVerifying] = useState(false)
   const [verificationMessage, setVerificationMessage] = useState("")
-  const [showPaymentButton, setShowPaymentButton] = useState(false)
-  const [buttonCountdown, setButtonCountdown] = useState(12) // 12 segundos
+  const [isButtonEnabled, setIsButtonEnabled] = useState(false)
+  const [buttonCountdown, setButtonCountdown] = useState(30) // 30 segundos
 
   const paymentId = searchParams.get("payment_id")
   const externalReference = searchParams.get("external_reference")
@@ -52,7 +52,7 @@ export default function PaymentPage() {
       setButtonCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(countdownTimer)
-          setShowPaymentButton(true)
+          setIsButtonEnabled(true)
           return 0
         }
         return prev - 1
@@ -202,32 +202,38 @@ export default function PaymentPage() {
               </ol>
             </div>
 
-            {showPaymentButton ? (
-              <Button
-                onClick={handlePaymentVerification}
-                disabled={isVerifying}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3"
-              >
-                {isVerifying ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    {verificationMessage}
+            <Button
+              onClick={handlePaymentVerification}
+              disabled={!isButtonEnabled || isVerifying}
+              className={`w-full font-semibold py-3 ${
+                isButtonEnabled
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "bg-slate-700 text-slate-400 cursor-not-allowed"
+              }`}
+            >
+              {isVerifying ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  {verificationMessage}
+                </span>
+              ) : !isButtonEnabled ? (
+                buttonCountdown > 15 ? (
+                  <span className="flex items-center justify-center">
+                    <Lock className="w-6 h-6" />
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2">
-                    <CheckCircle className="w-5 h-5" />
-                    Já realizei o pagamento
+                    <Lock className="w-5 h-5" />
+                    Aguarde {buttonCountdown}s para confirmar o pagamento
                   </span>
-                )}
-              </Button>
-            ) : (
-              <div className="w-full bg-slate-700 border border-slate-600 text-slate-300 font-semibold py-3 rounded-lg text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <Clock className="w-5 h-5 text-yellow-400" />
-                  <span>Aguarde {buttonCountdown}s para confirmar o pagamento</span>
-                </div>
-              </div>
-            )}
+                )
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  <CheckCircle className="w-5 h-5" />
+                  Já realizei o pagamento
+                </span>
+              )}
+            </Button>
 
             {verificationMessage && !isVerifying && (
               <div className="text-center text-sm text-yellow-400">{verificationMessage}</div>
