@@ -17,7 +17,6 @@ export default function CheckoutPage() {
   const [usersOnline, setUsersOnline] = useState(47)
   const [statusDownloads, setStatusDownloads] = useState(95)
   const [statusOnline, setStatusOnline] = useState(50)
-  const [initiateCheckoutSent, setInitiateCheckoutSent] = useState(false)
   const [selectedBumps, setSelectedBumps] = useState({
     formiga: false,
     picapau: false,
@@ -109,52 +108,6 @@ export default function CheckoutPage() {
     oscillator.start(audioContext.currentTime)
     oscillator.stop(audioContext.currentTime + 0.3)
   }
-
-  useEffect(() => {
-    if (!initiateCheckoutSent) {
-      const sendInitiateCheckout = async () => {
-        try {
-          const totalValue = calculateTotal()
-          const products = ["Desenho Completo: A turma de Charlie Brown"]
-
-          console.log("[v0] Enviando evento InitiateCheckout ao carregar página de checkout")
-
-          // Send client-side Facebook Pixel event
-          if (typeof window !== "undefined" && (window as any).fbq) {
-            ;(window as any).fbq("track", "InitiateCheckout", {
-              value: totalValue,
-              currency: "BRL",
-              content_ids: products.map((p) => p.replace(/[^a-zA-Z0-9_-]/g, "_")),
-              content_type: "product",
-              num_items: 1,
-            })
-            console.log("[v0] InitiateCheckout event sent via client-side fbq")
-          }
-
-          // Send server-side Facebook Conversions API event
-          await fetch("/api/facebook/track-purchase", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              event_name: "InitiateCheckout",
-              value: totalValue,
-              currency: "BRL",
-              products: products,
-            }),
-          })
-
-          console.log("[v0] InitiateCheckout event sent via server-side API")
-          setInitiateCheckoutSent(true)
-        } catch (error) {
-          console.error("[v0] Erro ao enviar InitiateCheckout:", error)
-        }
-      }
-
-      sendInitiateCheckout()
-    }
-  }, [initiateCheckoutSent])
 
   useEffect(() => {
     const timer = setInterval(() => {

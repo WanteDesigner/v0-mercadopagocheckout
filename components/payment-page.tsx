@@ -139,7 +139,7 @@ export default function PaymentPage() {
         <Card className="bg-slate-800 border-slate-700 text-white p-6">
           <div className="mb-6 -mx-6 -mt-6">
             <img
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/519028_1887158729%20%281%29-4c34ozB6T9QA3F4eL1UqU46Jpczyur.jpg"
+              src="/images/design-mode/519028_1887158729%20%281%29(1).jpg"
               alt="Pagamento PIX Passo a Passo"
               className="w-full h-auto rounded-t-lg border-b border-slate-700"
             />
@@ -240,7 +240,7 @@ export default function PaymentPage() {
             )}
 
             <div className="text-center text-sm text-slate-400">
-              <p>Após confirmar o pagamento, você será redirecionado automaticamente</p>
+              <p>Aguarde até 2 minutos confirmação do pagamento, você será redirecionado automaticamente!</p>
               <p className="text-yellow-400 mt-2">Chave PIX: designerprocurado@gmail.com</p>
             </div>
           </div>

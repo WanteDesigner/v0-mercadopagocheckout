@@ -97,6 +97,25 @@ export async function POST(request: NextRequest) {
     console.log("[v0] Valor:", amount)
     console.log("[v0] Descrição:", description)
 
+    try {
+      await fetch(`${request.nextUrl.origin}/api/emails/save`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          amount,
+          products: selectedProducts || [description],
+          timestamp: Date.now(),
+        }),
+      })
+      console.log("[v0] Email salvo na lista com sucesso")
+    } catch (error) {
+      console.error("[v0] Erro ao salvar email na lista:", error)
+      // Não falhar a criação do PIX se o salvamento do email falhar
+    }
+
     // Gerar ID único para a transação (máximo 25 caracteres)
     const timestamp = Date.now().toString()
     const transactionId = `NF${timestamp.substring(timestamp.length - 20)}`
