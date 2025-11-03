@@ -218,6 +218,25 @@ export default function CheckoutPage() {
     console.log("[v0] Iniciando processo de checkout...")
 
     try {
+      console.log("[v0] Salvando email na lista de emails...")
+      try {
+        await fetch("/api/emails/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            amount: calculateTotal(),
+            products: selectedProducts,
+            timestamp: new Date().toISOString(),
+          }),
+        })
+        console.log("[v0] Email salvo com sucesso na lista de emails")
+      } catch (emailError) {
+        console.error("[v0] Erro ao salvar email (continuando com checkout):", emailError)
+      }
+
       const products = ["Desenho Completo: A turma de Charlie Brown"]
       if (selectedBumps.formiga) products.push("Desenho Completo: A Formiga Atômica")
       if (selectedBumps.picapau) products.push("Desenho Completo – Pica-Pau Coleção Clássica")
