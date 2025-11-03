@@ -180,6 +180,53 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     console.log("[v0] Página de checkout carregada")
+
+    const sendInitiateCheckout = async () => {
+      try {
+        const totalValue = calculateTotal()
+        const products = ["Desenho Completo: A turma de Charlie Brown"]
+
+        console.log("[v0] Enviando evento InitiateCheckout")
+
+        // Send client-side Facebook Pixel event
+        if (typeof window !== "undefined" && (window as any).fbq) {
+          ;(window as any).fbq("track", "InitiateCheckout", {
+            value: totalValue,
+            currency: "BRL",
+            content_ids: products.map((p) => p.replace(/[^a-zA-Z0-9_-]/g, "_")),
+            content_type: "product",
+            num_items: products.length,
+          })
+          console.log("[v0] InitiateCheckout event sent via client-side fbq")
+        }
+
+        // Send server-side Facebook Conversions API event
+        await fetch("/api/facebook/track-purchase", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            event_name: "InitiateCheckout",
+            value: totalValue,
+            currency: "BRL",
+            products: products,
+            email: "",
+            payment_id: `checkout_${Date.now()}`,
+          }),
+        })
+
+        console.log("[v0] InitiateCheckout event sent via server-side API")
+      } catch (error) {
+        console.error("[v0] Erro ao enviar InitiateCheckout:", error)
+      }
+    }
+
+    sendInitiateCheckout()
+  }, [])
+
+  useEffect(() => {
+    console.log("[v0] Página de checkout carregada")
   }, [])
 
   const formatTime = (seconds: number) => {
