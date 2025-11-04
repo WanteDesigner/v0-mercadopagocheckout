@@ -35,9 +35,9 @@ export async function POST(request: NextRequest) {
       payment_id,
     })
 
-    const pixelId = "2509784602725629"
+    const pixelId = "2078137656287526"
     const accessToken =
-      "EAASEPX9a1SsBP2saH68VK1uLZC4zncqX8oF6z4CgZBnZCZCSbG9VZCdZAinb1sfTWqk94hIxaUqs1rSxfJd1cfIE33tZCFdutjuZAUYiVXMvh4bOZAAN27W6LFIAZBAu6A4V4l2qgQFeXsnEHE4SrOgtalXw2kF7dxgUDaEYcGps37AcZBIcAHJRr5ufX3mZCrVnYAZDZD"
+      "EAASEPX9a1SsBP7Vd2PGmQi86hqjhCuFr6cAYHBuUZCWcZBhV7bt5aZCPGk6MXwCpZBZBFK3ungv9Q3ZAISrTZAjraONXXy0IAeSxe7W5Whjw1vbHPS0Qt3o3dD0AvUfSkSTZA0H3nvLBDn0ZCyapQ704ZCTpN6qxd3ZCy0LN1qe7v687ndaFe5cTZCpP469xJjmxLgZDZD"
 
     const clientIp =
       request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || request.ip || "127.0.0.1"

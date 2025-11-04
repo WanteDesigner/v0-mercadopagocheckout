@@ -181,6 +181,13 @@ export default function CheckoutPage() {
   useEffect(() => {
     console.log("[v0] Página de checkout carregada")
 
+    const hasInitiateCheckoutFired = sessionStorage.getItem("initiateCheckoutFired")
+
+    if (hasInitiateCheckoutFired) {
+      console.log("[v0] InitiateCheckout já foi enviado nesta sessão, pulando...")
+      return
+    }
+
     const sendInitiateCheckout = async () => {
       try {
         const totalValue = calculateTotal()
@@ -217,16 +224,14 @@ export default function CheckoutPage() {
         })
 
         console.log("[v0] InitiateCheckout event sent via server-side API")
+
+        sessionStorage.setItem("initiateCheckoutFired", "true")
       } catch (error) {
         console.error("[v0] Erro ao enviar InitiateCheckout:", error)
       }
     }
 
     sendInitiateCheckout()
-  }, [])
-
-  useEffect(() => {
-    console.log("[v0] Página de checkout carregada")
   }, [])
 
   const formatTime = (seconds: number) => {

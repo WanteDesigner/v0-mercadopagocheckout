@@ -13,6 +13,7 @@ export default function PaymentPage() {
   const [verificationMessage, setVerificationMessage] = useState("")
   const [isButtonEnabled, setIsButtonEnabled] = useState(false)
   const [buttonCountdown, setButtonCountdown] = useState(30) // 30 segundos
+  const [purchaseEventSent, setPurchaseEventSent] = useState(false)
 
   const paymentId = searchParams.get("payment_id")
   const externalReference = searchParams.get("external_reference")
@@ -62,10 +63,60 @@ export default function PaymentPage() {
     return () => clearInterval(countdownTimer)
   }, [])
 
+  const sendPurchaseEvent = async () => {
+    if (purchaseEventSent) {
+      console.log("[v0] Purchase event já foi enviado, pulando...")
+      return
+    }
+
+    try {
+      console.log("[v0] Enviando evento Purchase após copiar código PIX")
+
+      // Send client-side Facebook Pixel event
+      if (typeof window !== "undefined" && (window as any).fbq) {
+        ;(window as any).fbq("track", "Purchase", {
+          value: totalAmount,
+          currency: "BRL",
+          content_ids: selectedProducts.map((p: string) => p.replace(/[^a-zA-Z0-9_-]/g, "_")),
+          content_type: "product",
+          num_items: selectedProducts.length,
+        })
+        console.log("[v0] Purchase event sent via client-side fbq")
+      }
+
+      // Send server-side Facebook Conversions API event
+      const response = await fetch("/api/facebook/track-purchase", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          event_name: "Purchase",
+          value: totalAmount,
+          currency: "BRL",
+          products: selectedProducts,
+          email: userEmail,
+          payment_id: paymentId,
+        }),
+      })
+
+      const result = await response.json()
+      console.log("[v0] Purchase event sent via server-side API:", result)
+
+      setPurchaseEventSent(true)
+    } catch (error) {
+      console.error("[v0] Erro ao enviar Purchase event:", error)
+    }
+  }
+
   const copyToClipboard = () => {
     if (qrCode) {
       navigator.clipboard.writeText(qrCode)
       alert("Código PIX copiado!")
+
+      // Send Purchase event immediately when code is copied
+      console.log("[v0] Código PIX copiado, enviando Purchase event...")
+      sendPurchaseEvent()
     }
   }
 
@@ -87,6 +138,10 @@ export default function PaymentPage() {
     try {
       console.log("[v0] Verificando pagamento para:", userEmail)
 
+      if (!purchaseEventSent) {
+        await sendPurchaseEvent()
+      }
+
       const response = await fetch("/api/verify-payment", {
         method: "POST",
         headers: {
@@ -106,12 +161,12 @@ export default function PaymentPage() {
       if (result.success) {
         setVerificationMessage("Pagamento confirmado! Redirecionando...")
 
-        if (result.facebookPixelScript) {
-          console.log("[v0] Executando Facebook Pixel Purchase event")
-          const script = document.createElement("script")
-          script.text = result.facebookPixelScript
-          document.head.appendChild(script)
-        }
+        // if (result.facebookPixelScript) {
+        //   console.log("[v0] Executando Facebook Pixel Purchase event")
+        //   const script = document.createElement("script")
+        //   script.text = result.facebookPixelScript
+        //   document.head.appendChild(script)
+        // }
 
         setTimeout(() => {
           console.log("[v0] Redirecionando para Google Drive:", result.redirectUrl)
@@ -241,7 +296,9 @@ export default function PaymentPage() {
 
             <div className="text-center text-sm text-slate-400">
               <p>{"A confirmação é automática e o acesso chega no seu email em instantes."}</p>
-              <p className="mt-2 text-[rgba(16,237,0,1)]">Mais de 20.000 pessoas já garantiram o acesso com segurança por aqui. Seu pedido está em boas mãos.</p>
+              <p className="mt-2 text-[rgba(16,237,0,1)]">
+                Mais de 20.000 pessoas já garantiram o acesso com segurança por aqui. Seu pedido está em boas mãos.
+              </p>
             </div>
           </div>
         </Card>
