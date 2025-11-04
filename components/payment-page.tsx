@@ -240,8 +240,8 @@ export default function PaymentPage() {
             )}
 
             <div className="text-center text-sm text-slate-400">
-              <p>Aguarde até 2 minutos confirmação do pagamento, você será redirecionado automaticamente!</p>
-              <p className="text-yellow-400 mt-2">Chave PIX: designerprocurado@gmail.com</p>
+              <p>{"A confirmação é automática e o acesso chega no seu email em instantes."}</p>
+              <p className="mt-2 text-[rgba(16,237,0,1)]">Mais de 20.000 pessoas já garantiram o acesso com segurança por aqui. Seu pedido está em boas mãos.</p>
             </div>
           </div>
         </Card>
