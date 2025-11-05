@@ -54,9 +54,9 @@ export async function POST(request: Request) {
     const facebookResult = await facebookResponse.json()
     console.log("[v0] Facebook Purchase event result:", facebookResult)
 
-    const redirectLink = "https://v0-nostalflix-finalmain.vercel.app"
+    const redirectLink = "https://nostalflix.vercel.app"
 
-    console.log("[v0] Pagamento verificado, Purchase event enviado, redirecionando para NostalFlix")
+    console.log("[v0] Pagamento verificado, Purchase event enviado, redirecionando para:", redirectLink)
 
     return NextResponse.json({
       success: true,

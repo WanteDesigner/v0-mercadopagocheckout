@@ -271,58 +271,15 @@ export default function CheckoutPage() {
     console.log("[v0] Email do cliente:", email)
 
     try {
-      console.log("[v0] ===== SALVANDO EMAIL NA LISTA =====")
-      console.log("[v0] Email:", email)
-      console.log("[v0] Valor total:", calculateTotal())
-      console.log("[v0] Produtos selecionados:", selectedProducts)
-
-      try {
-        const emailData = {
-          email,
-          amount: calculateTotal(),
-          products: selectedProducts,
-          timestamp: new Date().toISOString(),
-        }
-
-        console.log("[v0] Dados para salvar:", JSON.stringify(emailData, null, 2))
-        console.log("[v0] Enviando requisição para /api/emails/save...")
-
-        const emailResponse = await fetch("/api/emails/save", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(emailData),
-        })
-
-        console.log("[v0] Status da resposta do email save:", emailResponse.status)
-
-        if (!emailResponse.ok) {
-          const errorText = await emailResponse.text()
-          console.error("[v0] Erro ao salvar email - Status:", emailResponse.status, "Resposta:", errorText)
-          throw new Error(`Erro HTTP ${emailResponse.status}: ${errorText}`)
-        }
-
-        const emailResult = await emailResponse.json()
-        console.log("[v0] ✅ Email salvo com sucesso na lista de emails!")
-        console.log("[v0] Resposta:", JSON.stringify(emailResult, null, 2))
-      } catch (emailError) {
-        console.error("[v0] ❌ ERRO ao salvar email:", emailError)
-        console.error("[v0] Detalhes do erro:", emailError instanceof Error ? emailError.message : String(emailError))
-        // Continua com o checkout mesmo se falhar ao salvar o email
-      }
-
-      console.log("[v0] ===== FIM DO SALVAMENTO DE EMAIL =====")
-
       const products = ["Desenho Completo: A turma de Charlie Brown"]
       if (selectedBumps.formiga) products.push("Desenho Completo: A Formiga Atômica")
-      if (selectedBumps.picapau) products.push("Desenho Completo – Pica-Pau Coleção Clássica")
-      if (selectedBumps.jetsons) products.push("Desenho Completo: Os Jetsons")
-      if (selectedBumps.luluzinha) products.push("Desenho Completo – Luluzinha")
-      if (selectedBumps.caverna) products.push("Desenho Completo: A Caverna do Dragão")
-      if (selectedBumps.tom) products.push("Desenho Completo – As aventuras de Tom e Jerry")
       if (selectedBumps.thundercats) products.push("Desenho Completo: Thundercats")
+      if (selectedBumps.jetsons) products.push("Desenho Completo: Os Jetsons")
+      if (selectedBumps.picapau) products.push("Desenho Completo – Pica-Pau Coleção Clássica")
+      if (selectedBumps.caverna) products.push("Desenho Completo: A Caverna do Dragão")
       if (selectedBumps.shera) products.push("Desenho Completo: She-ra")
+      if (selectedBumps.luluzinha) products.push("Desenho Completo – Luluzinha")
+      if (selectedBumps.tom) products.push("Desenho Completo – As aventuras de Tom e Jerry")
 
       const paymentData = {
         email,

@@ -154,12 +154,21 @@ export default function PaymentPage() {
       console.log("[v0] Resultado da verificação:", result)
 
       if (result.success) {
-        setVerificationMessage("Pagamento confirmado! Redirecionando...")
+        setVerificationMessage("Pagamento confirmado! Abrindo acesso...")
 
-        setTimeout(() => {
-          console.log("[v0] Redirecionando para NostalFlix:", result.redirectUrl)
-          window.location.href = result.redirectUrl
-        }, 1500)
+        const redirectUrl = result.redirectUrl || "https://nostalflix.vercel.app"
+        console.log("[v0] URL de redirecionamento:", redirectUrl)
+
+        try {
+          console.log("[v0] Abrindo link em nova aba:", redirectUrl)
+          window.open(redirectUrl, "_blank")
+          setVerificationMessage("Acesso aberto em nova aba! Verifique suas abas do navegador.")
+          setIsVerifying(false)
+        } catch (redirectError) {
+          console.error("[v0] Erro ao abrir nova aba:", redirectError)
+          setVerificationMessage("Erro ao abrir link. Tente novamente.")
+          setIsVerifying(false)
+        }
       } else {
         setVerificationMessage("Erro ao verificar pagamento. Tente novamente.")
         setIsVerifying(false)
