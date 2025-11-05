@@ -18,7 +18,16 @@ export async function POST(request: Request) {
     }
 
     console.log("[v0] Enviando evento Purchase para Facebook Pixel")
-    const facebookResponse = await fetch(`${request.headers.get("origin")}/api/facebook/track-purchase`, {
+
+    const baseUrl =
+      request.headers.get("origin") ||
+      request.headers.get("referer")?.split("/").slice(0, 3).join("/") ||
+      "https://checkoutmanga.vercel.app"
+    const facebookApiUrl = `${baseUrl}/api/facebook/track-purchase`
+
+    console.log("[v0] Facebook API URL:", facebookApiUrl)
+
+    const facebookResponse = await fetch(facebookApiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -36,17 +45,23 @@ export async function POST(request: Request) {
       }),
     })
 
+    if (!facebookResponse.ok) {
+      const errorText = await facebookResponse.text()
+      console.error("[v0] Facebook API error response:", errorText)
+      throw new Error(`Facebook API returned ${facebookResponse.status}: ${errorText}`)
+    }
+
     const facebookResult = await facebookResponse.json()
     console.log("[v0] Facebook Purchase event result:", facebookResult)
 
-    const driveLink = "https://drive.google.com/drive/folders/1CV0m6xnqh3j9tHiWorszRZfsCXUYtkGn"
+    const redirectLink = "https://v0-nostalflix-finalmain.vercel.app"
 
-    console.log("[v0] Pagamento verificado, Purchase event enviado, redirecionando para Google Drive")
+    console.log("[v0] Pagamento verificado, Purchase event enviado, redirecionando para NostalFlix")
 
     return NextResponse.json({
       success: true,
       message: "Pagamento verificado com sucesso",
-      redirectUrl: driveLink,
+      redirectUrl: redirectLink,
       facebookPixelScript: facebookResult.script,
     })
   } catch (error) {

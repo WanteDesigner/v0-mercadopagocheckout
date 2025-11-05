@@ -63,7 +63,7 @@ export default function PaymentPage() {
     return () => clearInterval(countdownTimer)
   }, [])
 
-  const sendPurchaseEvent = async () => {
+  const sendPurchaseEvent = () => {
     if (purchaseEventSent) {
       console.log("[v0] Purchase event já foi enviado, pulando...")
       return
@@ -74,36 +74,25 @@ export default function PaymentPage() {
 
       // Send client-side Facebook Pixel event
       if (typeof window !== "undefined" && (window as any).fbq) {
+        const contentIds = selectedProducts.map((p: string) => p.replace(/[^a-zA-Z0-9_-]/g, "_"))
         ;(window as any).fbq("track", "Purchase", {
           value: totalAmount,
           currency: "BRL",
-          content_ids: selectedProducts.map((p: string) => p.replace(/[^a-zA-Z0-9_-]/g, "_")),
+          content_ids: contentIds,
           content_type: "product",
           num_items: selectedProducts.length,
+          order_id: paymentId,
         })
-        console.log("[v0] Purchase event sent via client-side fbq")
-      }
-
-      // Send server-side Facebook Conversions API event
-      const response = await fetch("/api/facebook/track-purchase", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          event_name: "Purchase",
+        console.log("[v0] Purchase event sent via client-side fbq:", {
           value: totalAmount,
-          currency: "BRL",
-          products: selectedProducts,
-          email: userEmail,
-          payment_id: paymentId,
-        }),
-      })
+          content_ids: contentIds,
+          order_id: paymentId,
+        })
 
-      const result = await response.json()
-      console.log("[v0] Purchase event sent via server-side API:", result)
-
-      setPurchaseEventSent(true)
+        setPurchaseEventSent(true)
+      } else {
+        console.log("[v0] Facebook Pixel not loaded, will retry on payment verification")
+      }
     } catch (error) {
       console.error("[v0] Erro ao enviar Purchase event:", error)
     }
@@ -139,7 +128,7 @@ export default function PaymentPage() {
       console.log("[v0] Verificando pagamento para:", userEmail)
 
       if (!purchaseEventSent) {
-        await sendPurchaseEvent()
+        sendPurchaseEvent()
       }
 
       const response = await fetch("/api/verify-payment", {
@@ -155,21 +144,20 @@ export default function PaymentPage() {
         }),
       })
 
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("[v0] Verify payment error response:", errorText)
+        throw new Error(`Verify payment API returned ${response.status}`)
+      }
+
       const result = await response.json()
       console.log("[v0] Resultado da verificação:", result)
 
       if (result.success) {
         setVerificationMessage("Pagamento confirmado! Redirecionando...")
 
-        // if (result.facebookPixelScript) {
-        //   console.log("[v0] Executando Facebook Pixel Purchase event")
-        //   const script = document.createElement("script")
-        //   script.text = result.facebookPixelScript
-        //   document.head.appendChild(script)
-        // }
-
         setTimeout(() => {
-          console.log("[v0] Redirecionando para Google Drive:", result.redirectUrl)
+          console.log("[v0] Redirecionando para NostalFlix:", result.redirectUrl)
           window.location.href = result.redirectUrl
         }, 1500)
       } else {
