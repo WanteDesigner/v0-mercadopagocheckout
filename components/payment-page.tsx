@@ -123,9 +123,9 @@ export default function PaymentPage() {
           </div>
 
           <div className="text-center mb-6">
-            <h1 className="text-xl font-bold mb-2">PIX - Aprovação Imediata</h1>
+            <h1 className="text-xl font-bold mb-2 text-[rgba(0,255,50,1)]">PIX - Aprovação Imediata</h1>
             <p className="text-slate-300 text-sm">Escaneie o QR Code ou copie o código PIX</p>
-            <p className="text-yellow-400 text-xs mt-2">Chave PIX: designerprocurado@gmail.com</p>
+            
           </div>
 
           <div className="space-y-4">
