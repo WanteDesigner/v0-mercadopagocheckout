@@ -201,21 +201,26 @@ export default function CheckoutPage() {
         const totalValue = calculateTotal()
         const products = ["Desenho Completo: A turma de Charlie Brown"]
 
-        console.log("[v0] Enviando evento InitiateCheckout")
+        const eventId = `initiate_checkout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-        // Send client-side Facebook Pixel event
+        console.log("[v0] Enviando evento InitiateCheckout com event_id:", eventId)
+
         if (typeof window !== "undefined" && (window as any).fbq) {
-          ;(window as any).fbq("track", "InitiateCheckout", {
-            value: totalValue,
-            currency: "BRL",
-            content_ids: products.map((p) => p.replace(/[^a-zA-Z0-9_-]/g, "_")),
-            content_type: "product",
-            num_items: products.length,
-          })
-          console.log("[v0] InitiateCheckout event sent via client-side fbq")
+          ;(window as any).fbq(
+            "track",
+            "InitiateCheckout",
+            {
+              value: totalValue,
+              currency: "BRL",
+              content_ids: products.map((p) => p.replace(/[^a-zA-Z0-9_-]/g, "_")),
+              content_type: "product",
+              num_items: products.length,
+            },
+            { eventID: eventId },
+          )
+          console.log("[v0] InitiateCheckout event sent via client-side fbq with eventID")
         }
 
-        // Send server-side Facebook Conversions API event
         await fetch("/api/facebook/track-purchase", {
           method: "POST",
           headers: {
@@ -223,6 +228,7 @@ export default function CheckoutPage() {
           },
           body: JSON.stringify({
             event_name: "InitiateCheckout",
+            event_id: eventId,
             value: totalValue,
             currency: "BRL",
             products: products,
@@ -231,7 +237,7 @@ export default function CheckoutPage() {
           }),
         })
 
-        console.log("[v0] InitiateCheckout event sent via server-side API")
+        console.log("[v0] InitiateCheckout event sent via server-side API with event_id")
 
         sessionStorage.setItem("initiateCheckoutFired", "true")
         sessionStorage.setItem("initiateCheckoutFiredTime", currentTime.toString())
@@ -352,21 +358,27 @@ export default function CheckoutPage() {
 
       try {
         const totalValue = calculateTotal()
-        console.log("[v0] Enviando evento AddPaymentInfo após geração do PIX")
 
-        // Send client-side Facebook Pixel event
+        const eventId = `add_payment_info_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
+        console.log("[v0] Enviando evento AddPaymentInfo após geração do PIX com event_id:", eventId)
+
         if (typeof window !== "undefined" && (window as any).fbq) {
-          ;(window as any).fbq("track", "AddPaymentInfo", {
-            value: totalValue,
-            currency: "BRL",
-            content_ids: products.map((p) => p.replace(/[^a-zA-Z0-9_-]/g, "_")),
-            content_type: "product",
-            num_items: products.length,
-          })
-          console.log("[v0] AddPaymentInfo event sent via client-side fbq")
+          ;(window as any).fbq(
+            "track",
+            "AddPaymentInfo",
+            {
+              value: totalValue,
+              currency: "BRL",
+              content_ids: products.map((p) => p.replace(/[^a-zA-Z0-9_-]/g, "_")),
+              content_type: "product",
+              num_items: products.length,
+            },
+            { eventID: eventId },
+          )
+          console.log("[v0] AddPaymentInfo event sent via client-side fbq with eventID")
         }
 
-        // Send server-side Facebook Conversions API event
         await fetch("/api/facebook/track-purchase", {
           method: "POST",
           headers: {
@@ -374,6 +386,7 @@ export default function CheckoutPage() {
           },
           body: JSON.stringify({
             event_name: "AddPaymentInfo",
+            event_id: eventId,
             value: totalValue,
             currency: "BRL",
             products: products,
@@ -382,7 +395,7 @@ export default function CheckoutPage() {
           }),
         })
 
-        console.log("[v0] AddPaymentInfo event sent via server-side API")
+        console.log("[v0] AddPaymentInfo event sent via server-side API with event_id")
       } catch (error) {
         console.error("[v0] Erro ao enviar AddPaymentInfo:", error)
       }
@@ -828,7 +841,7 @@ export default function CheckoutPage() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-xs sm:text-sm font-medium mb-2">E-mail que deseja Receber o Acesso *</label>
+              <label className="block text-xs sm:text-sm font-medium mb-2">E-mail que deseja Receber o Desenho*</label>
               <Input
                 type="email"
                 placeholder="seu@email.com"

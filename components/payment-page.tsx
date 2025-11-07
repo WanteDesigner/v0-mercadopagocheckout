@@ -76,16 +76,54 @@ export default function PaymentPage() {
     setIsVerifying(true)
     setVerificationMessage("Enviando confirmação...")
 
-    if (!purchaseEventSent && typeof window !== "undefined" && (window as any).fbq) {
-      const productData = {
-        value: Number.parseFloat(searchParams.get("amount") || "0"),
-        currency: "BRL",
+    if (!purchaseEventSent) {
+      try {
+        const productData = {
+          value: Number.parseFloat(searchParams.get("amount") || "0"),
+          currency: "BRL",
+        }
+
+        // Generate unique event_id for deduplication
+        const eventId = `purchase_${searchParams.get("payment_id")}_${Date.now()}`
+
+        console.log("[v0] Enviando Purchase event com event_id:", eventId)
+
+        // Send client-side Facebook Pixel event with eventID
+        if (typeof window !== "undefined" && (window as any).fbq) {
+          ;(window as any).fbq("track", "Purchase", productData, { eventID: eventId })
+          console.log("[v0] Purchase event sent via client-side fbq with eventID")
+        }
+
+        // Send server-side Facebook Conversions API event with matching event_id
+        const purchaseResponse = await fetch("/api/facebook/track-purchase", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            event_name: "Purchase",
+            event_id: eventId,
+            value: productData.value,
+            currency: productData.currency,
+            products: JSON.parse(searchParams.get("products") || "[]"),
+            email: searchParams.get("email") || "",
+            payment_id: searchParams.get("payment_id") || "",
+          }),
+        })
+
+        if (purchaseResponse.ok) {
+          console.log("[v0] Purchase event sent via server-side API with event_id")
+        } else {
+          console.error("[v0] Erro ao enviar Purchase via API:", await purchaseResponse.text())
+        }
+
+        setPurchaseEventSent(true)
+      } catch (error) {
+        console.error("[v0] Erro ao enviar Purchase event:", error)
       }
-      ;(window as any).fbq("track", "Purchase", productData)
-      setPurchaseEventSent(true)
-      console.log("[v0] Purchase event sent before redirect")
     }
 
+    // Wait for events to be sent before redirect
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
     setVerificationMessage("Abrindo acesso...")
