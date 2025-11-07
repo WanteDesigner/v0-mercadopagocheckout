@@ -69,22 +69,12 @@ export default function PaymentPage() {
     navigator.clipboard.writeText(qrCode)
     setVerificationMessage("Código PIX copiado!")
 
-    if (!purchaseEventSent && typeof window !== "undefined" && (window as any).fbq) {
-      const productData = {
-        value: Number.parseFloat(searchParams.get("amount") || "0"),
-        currency: "BRL",
-      }
-      ;(window as any).fbq("track", "Purchase", productData)
-      setPurchaseEventSent(true)
-      console.log("[v0] Purchase event sent when copying PIX code")
-    }
-
     setTimeout(() => setVerificationMessage(""), 3000)
   }
 
   const handlePaymentVerification = async () => {
     setIsVerifying(true)
-    setVerificationMessage("Abrindo acesso...")
+    setVerificationMessage("Enviando confirmação...")
 
     if (!purchaseEventSent && typeof window !== "undefined" && (window as any).fbq) {
       const productData = {
@@ -93,16 +83,17 @@ export default function PaymentPage() {
       }
       ;(window as any).fbq("track", "Purchase", productData)
       setPurchaseEventSent(true)
-      console.log("[v0] Purchase event sent when confirming payment")
+      console.log("[v0] Purchase event sent before redirect")
     }
 
-    setTimeout(() => {
-      window.open("https://nostalflix.vercel.app", "_blank")
-      setIsVerifying(false)
-      setVerificationMessage("Acesso aberto em uma nova aba!")
+    await new Promise((resolve) => setTimeout(resolve, 1500))
 
-      setTimeout(() => setVerificationMessage(""), 3000)
-    }, 1000)
+    setVerificationMessage("Abrindo acesso...")
+    window.open("https://nostalflix.vercel.app", "_blank")
+    setIsVerifying(false)
+    setVerificationMessage("Acesso aberto em uma nova aba!")
+
+    setTimeout(() => setVerificationMessage(""), 3000)
   }
 
   return (
@@ -125,7 +116,6 @@ export default function PaymentPage() {
           <div className="text-center mb-6">
             <h1 className="text-xl font-bold mb-2 text-[rgba(0,255,50,1)]">PIX - Aprovação Imediata</h1>
             <p className="text-slate-300 text-sm">Escaneie o QR Code ou copie o código PIX</p>
-            
           </div>
 
           <div className="space-y-4">
@@ -204,8 +194,7 @@ export default function PaymentPage() {
             )}
 
             <div className="text-center text-sm text-slate-400">
-              <p>{"A confirmação é automática e você será redirecionado para nosso aplicativo imediatamente!"}</p>
-              
+              <p>A confirmação é automática e você será redirecionado para nosso aplicativo imediatamente!</p>
             </div>
           </div>
         </Card>
