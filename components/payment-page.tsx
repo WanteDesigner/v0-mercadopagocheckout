@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Copy, Clock, ArrowLeft, CheckCircle, Lock } from "lucide-react"
+import { Copy, Clock, ArrowLeft, CheckCircle, Lock, Shield, CheckCircle2 } from "lucide-react"
 
 export default function PaymentPage() {
   const searchParams = useSearchParams()
@@ -12,48 +12,17 @@ export default function PaymentPage() {
   const [isVerifying, setIsVerifying] = useState(false)
   const [verificationMessage, setVerificationMessage] = useState("")
   const [isButtonEnabled, setIsButtonEnabled] = useState(false)
-  const [buttonCountdown, setButtonCountdown] = useState(30) // 30 segundos
+  const [buttonCountdown, setButtonCountdown] = useState(75) // 75 segundos
   const [purchaseEventSent, setPurchaseEventSent] = useState(false)
-
-  const paymentId = searchParams.get("payment_id")
-  const externalReference = searchParams.get("external_reference")
-  const qrCode = searchParams.get("qr_code")
-  const qrCodeBase64 = searchParams.get("qr_code_base64")
-  const userEmail = searchParams.get("email")
-  const selectedProducts = searchParams.get("products")
-    ? JSON.parse(decodeURIComponent(searchParams.get("products")!))
-    : []
-  const totalAmount = searchParams.get("amount") ? Number.parseFloat(searchParams.get("amount")!) : 10.0
-
-  useEffect(() => {
-    console.log("[v0] Página de pagamento carregada")
-    console.log("[v0] Payment ID:", paymentId)
-    console.log("[v0] QR Code presente:", !!qrCode)
-    console.log("[v0] QR Code Base64 presente:", !!qrCodeBase64)
-    console.log("[v0] Email:", userEmail)
-    console.log("[v0] Produtos:", selectedProducts)
-  }, [])
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
+  const [qrCodeBase64, setQrCodeBase64] = useState("")
+  const [qrCode, setQrCode] = useState("")
+  const [showButton, setShowButton] = useState(false)
 
   useEffect(() => {
     const countdownTimer = setInterval(() => {
-      setButtonCountdown((prev) => {
+      setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(countdownTimer)
-          setIsButtonEnabled(true)
           return 0
         }
         return prev - 1
@@ -63,121 +32,77 @@ export default function PaymentPage() {
     return () => clearInterval(countdownTimer)
   }, [])
 
-  const sendPurchaseEvent = () => {
-    if (purchaseEventSent) {
-      console.log("[v0] Purchase event já foi enviado, pulando...")
-      return
-    }
+  useEffect(() => {
+    const countdownTimer = setInterval(() => {
+      setButtonCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownTimer)
+          setIsButtonEnabled(true)
+          setShowButton(true) // Show button when countdown finishes
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
 
-    try {
-      console.log("[v0] Enviando evento Purchase após copiar código PIX")
+    return () => clearInterval(countdownTimer)
+  }, [])
 
-      // Send client-side Facebook Pixel event
-      if (typeof window !== "undefined" && (window as any).fbq) {
-        const contentIds = selectedProducts.map((p: string) => p.replace(/[^a-zA-Z0-9_-]/g, "_"))
-        ;(window as any).fbq("track", "Purchase", {
-          value: totalAmount,
-          currency: "BRL",
-          content_ids: contentIds,
-          content_type: "product",
-          num_items: selectedProducts.length,
-          order_id: paymentId,
-        })
-        console.log("[v0] Purchase event sent via client-side fbq:", {
-          value: totalAmount,
-          content_ids: contentIds,
-          order_id: paymentId,
-        })
+  useEffect(() => {
+    const qrCodeParam = searchParams.get("qr_code")
+    const qrCodeBase64Param = searchParams.get("qr_code_base64")
 
-        setPurchaseEventSent(true)
-      } else {
-        console.log("[v0] Facebook Pixel not loaded, will retry on payment verification")
-      }
-    } catch (error) {
-      console.error("[v0] Erro ao enviar Purchase event:", error)
-    }
+    console.log("[v0] QR Code from URL:", qrCodeParam ? "presente" : "ausente")
+    console.log("[v0] QR Code Base64 from URL:", qrCodeBase64Param ? "presente" : "ausente")
+
+    if (qrCodeParam) setQrCode(qrCodeParam)
+    if (qrCodeBase64Param) setQrCodeBase64(qrCodeBase64Param)
+  }, [searchParams])
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`
   }
 
   const copyToClipboard = () => {
-    if (qrCode) {
-      navigator.clipboard.writeText(qrCode)
-      alert("Código PIX copiado!")
+    navigator.clipboard.writeText(qrCode)
+    setVerificationMessage("Código PIX copiado!")
 
-      // Send Purchase event immediately when code is copied
-      console.log("[v0] Código PIX copiado, enviando Purchase event...")
-      sendPurchaseEvent()
+    if (!purchaseEventSent && typeof window !== "undefined" && (window as any).fbq) {
+      const productData = {
+        value: Number.parseFloat(searchParams.get("amount") || "0"),
+        currency: "BRL",
+      }
+      ;(window as any).fbq("track", "Purchase", productData)
+      setPurchaseEventSent(true)
+      console.log("[v0] Purchase event sent when copying PIX code")
     }
-  }
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+    setTimeout(() => setVerificationMessage(""), 3000)
   }
 
   const handlePaymentVerification = async () => {
-    if (!userEmail || !paymentId) {
-      alert("Informações de pagamento não encontradas")
-      return
-    }
-
     setIsVerifying(true)
-    setVerificationMessage("Verificando pagamento...")
+    setVerificationMessage("Abrindo acesso...")
 
-    try {
-      console.log("[v0] Verificando pagamento para:", userEmail)
-
-      if (!purchaseEventSent) {
-        sendPurchaseEvent()
+    if (!purchaseEventSent && typeof window !== "undefined" && (window as any).fbq) {
+      const productData = {
+        value: Number.parseFloat(searchParams.get("amount") || "0"),
+        currency: "BRL",
       }
-
-      const response = await fetch("/api/verify-payment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: userEmail,
-          paymentId: paymentId,
-          products: selectedProducts,
-          totalValue: totalAmount,
-        }),
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error("[v0] Verify payment error response:", errorText)
-        throw new Error(`Verify payment API returned ${response.status}`)
-      }
-
-      const result = await response.json()
-      console.log("[v0] Resultado da verificação:", result)
-
-      if (result.success) {
-        setVerificationMessage("Pagamento confirmado! Abrindo acesso...")
-
-        const redirectUrl = result.redirectUrl || "https://nostalflix.vercel.app"
-        console.log("[v0] URL de redirecionamento:", redirectUrl)
-
-        try {
-          console.log("[v0] Abrindo link em nova aba:", redirectUrl)
-          window.open(redirectUrl, "_blank")
-          setVerificationMessage("Acesso aberto em nova aba! Verifique suas abas do navegador.")
-          setIsVerifying(false)
-        } catch (redirectError) {
-          console.error("[v0] Erro ao abrir nova aba:", redirectError)
-          setVerificationMessage("Erro ao abrir link. Tente novamente.")
-          setIsVerifying(false)
-        }
-      } else {
-        setVerificationMessage("Erro ao verificar pagamento. Tente novamente.")
-        setIsVerifying(false)
-      }
-    } catch (error) {
-      console.error("[v0] Erro ao verificar pagamento:", error)
-      setVerificationMessage("Erro ao verificar pagamento. Tente novamente.")
-      setIsVerifying(false)
+      ;(window as any).fbq("track", "Purchase", productData)
+      setPurchaseEventSent(true)
+      console.log("[v0] Purchase event sent when confirming payment")
     }
+
+    setTimeout(() => {
+      window.open("https://nostalflix.vercel.app", "_blank")
+      setIsVerifying(false)
+      setVerificationMessage("Acesso aberto em uma nova aba!")
+
+      setTimeout(() => setVerificationMessage(""), 3000)
+    }, 1000)
   }
 
   return (
@@ -254,38 +179,25 @@ export default function PaymentPage() {
               </ol>
             </div>
 
-            <Button
-              onClick={handlePaymentVerification}
-              disabled={!isButtonEnabled || isVerifying}
-              className={`w-full font-semibold py-3 ${
-                isButtonEnabled
-                  ? "bg-green-600 hover:bg-green-700 text-white"
-                  : "bg-slate-700 text-slate-400 cursor-not-allowed"
-              }`}
-            >
-              {isVerifying ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  {verificationMessage}
-                </span>
-              ) : !isButtonEnabled ? (
-                buttonCountdown > 15 ? (
-                  <span className="flex items-center justify-center">
-                    <Lock className="w-6 h-6" />
+            {showButton && (
+              <Button
+                onClick={handlePaymentVerification}
+                disabled={!isButtonEnabled || isVerifying}
+                className="w-full font-semibold py-3 bg-green-600 hover:bg-green-700 text-white"
+              >
+                {isVerifying ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    {verificationMessage}
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2">
-                    <Lock className="w-5 h-5" />
-                    Aguarde {buttonCountdown}s para confirmar o pagamento
+                    <CheckCircle className="w-5 h-5" />
+                    Já realizei o pagamento
                   </span>
-                )
-              ) : (
-                <span className="flex items-center justify-center gap-2">
-                  <CheckCircle className="w-5 h-5" />
-                  Já realizei o pagamento
-                </span>
-              )}
-            </Button>
+                )}
+              </Button>
+            )}
 
             {verificationMessage && !isVerifying && (
               <div className="text-center text-sm text-yellow-400">{verificationMessage}</div>
@@ -293,10 +205,54 @@ export default function PaymentPage() {
 
             <div className="text-center text-sm text-slate-400">
               <p>{"A confirmação é automática e o acesso chega no seu email em instantes."}</p>
-              <p className="mt-2 text-[rgba(16,237,0,1)]">
-                Mais de 20.000 pessoas já garantiram o acesso com segurança por aqui. Seu pedido está em boas mãos.
-              </p>
+              
             </div>
+          </div>
+        </Card>
+
+        <Card className="bg-slate-900 border-slate-700 p-6">
+          <div className="text-center mb-4">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Shield className="w-6 h-6 text-green-500" />
+              <h3 className="text-lg font-semibold text-white">Segurança Garantida</h3>
+            </div>
+            <p className="text-sm text-slate-400">Sua compra está 100% protegida</p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 bg-slate-800 p-3 rounded-lg">
+              <Lock className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-semibold text-white">Pagamento Seguro</h4>
+                <p className="text-xs text-slate-400">
+                  Processamento via Mercado Pago com criptografia de dados bancários
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 bg-slate-800 p-3 rounded-lg">
+              <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-semibold text-white">Acesso Imediato</h4>
+                <p className="text-xs text-slate-400">
+                  Após a confirmação do pagamento, você recebe o acesso automaticamente no email
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 bg-slate-800 p-3 rounded-lg">
+              <Shield className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-semibold text-white">Garantia de Satisfação</h4>
+                <p className="text-xs text-slate-400">
+                  Mais de 20.000 clientes satisfeitos. Suporte disponível para qualquer dúvida
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-slate-700 text-center">
+            <p className="text-xs text-slate-500">Seus dados estão seguros e protegidos por criptografia SSL</p>
           </div>
         </Card>
       </div>

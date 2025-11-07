@@ -182,6 +182,14 @@ export default function CheckoutPage() {
     console.log("[v0] Página de checkout carregada")
 
     const hasInitiateCheckoutFired = sessionStorage.getItem("initiateCheckoutFired")
+    const lastFiredTime = sessionStorage.getItem("initiateCheckoutFiredTime")
+    const currentTime = Date.now()
+
+    // Reset flag if more than 1 hour has passed
+    if (lastFiredTime && currentTime - Number.parseInt(lastFiredTime) > 3600000) {
+      sessionStorage.removeItem("initiateCheckoutFired")
+      sessionStorage.removeItem("initiateCheckoutFiredTime")
+    }
 
     if (hasInitiateCheckoutFired) {
       console.log("[v0] InitiateCheckout já foi enviado nesta sessão, pulando...")
@@ -226,6 +234,7 @@ export default function CheckoutPage() {
         console.log("[v0] InitiateCheckout event sent via server-side API")
 
         sessionStorage.setItem("initiateCheckoutFired", "true")
+        sessionStorage.setItem("initiateCheckoutFiredTime", currentTime.toString())
       } catch (error) {
         console.error("[v0] Erro ao enviar InitiateCheckout:", error)
       }
