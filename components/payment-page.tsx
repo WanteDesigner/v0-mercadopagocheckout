@@ -204,7 +204,7 @@ export default function PaymentPage() {
             )}
 
             <div className="text-center text-sm text-slate-400">
-              <p>{"A confirmação é automática e o acesso chega no seu email em instantes."}</p>
+              <p>{"A confirmação é automática e você será redirecionado para nosso aplicativo imediatamente!"}</p>
               
             </div>
           </div>
