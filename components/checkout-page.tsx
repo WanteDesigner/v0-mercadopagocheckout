@@ -402,14 +402,15 @@ export default function CheckoutPage() {
 
       console.log("[v0] Redirecionando para página de pagamento...")
 
+      sessionStorage.setItem("payment_qr_code", data.qr_code || "")
+      sessionStorage.setItem("payment_qr_code_base64", data.qr_code_base64 || "")
+      sessionStorage.setItem("payment_email", email)
+      sessionStorage.setItem("payment_products", JSON.stringify(products))
+      sessionStorage.setItem("payment_amount", calculateTotal().toString())
+
       const params = new URLSearchParams({
         payment_id: data.payment_id,
         external_reference: data.external_reference || "",
-        qr_code: data.qr_code || "",
-        qr_code_base64: data.qr_code_base64 || "",
-        email: email,
-        products: JSON.stringify(products),
-        amount: calculateTotal().toString(),
       })
 
       console.log("[v0] URL de redirecionamento:", `/payment?${params.toString()}`)
@@ -433,7 +434,7 @@ export default function CheckoutPage() {
           <AlarmClock className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0" />
           <div className="text-white text-center">
             <span className="text-lg sm:text-xl font-bold">{formatTime(timeLeft)}</span>
-            <span className="ml-2 sm:ml-3 text-xs sm:text-sm leading-7">Aproveite essa Super Promoção </span>
+            <span className="ml-2 sm:ml-3 text-xs sm:text-sm leading-7">Aproveite nossa promoção de Natal🎄 </span>
           </div>
         </div>
 

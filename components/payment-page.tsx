@@ -49,15 +49,15 @@ export default function PaymentPage() {
   }, [])
 
   useEffect(() => {
-    const qrCodeParam = searchParams.get("qr_code")
-    const qrCodeBase64Param = searchParams.get("qr_code_base64")
+    const qrCodeFromStorage = sessionStorage.getItem("payment_qr_code")
+    const qrCodeBase64FromStorage = sessionStorage.getItem("payment_qr_code_base64")
 
-    console.log("[v0] QR Code from URL:", qrCodeParam ? "presente" : "ausente")
-    console.log("[v0] QR Code Base64 from URL:", qrCodeBase64Param ? "presente" : "ausente")
+    console.log("[v0] QR Code from sessionStorage:", qrCodeFromStorage ? "presente" : "ausente")
+    console.log("[v0] QR Code Base64 from sessionStorage:", qrCodeBase64FromStorage ? "presente" : "ausente")
 
-    if (qrCodeParam) setQrCode(qrCodeParam)
-    if (qrCodeBase64Param) setQrCodeBase64(qrCodeBase64Param)
-  }, [searchParams])
+    if (qrCodeFromStorage) setQrCode(qrCodeFromStorage)
+    if (qrCodeBase64FromStorage) setQrCodeBase64(qrCodeBase64FromStorage)
+  }, [])
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60)
@@ -78,8 +78,12 @@ export default function PaymentPage() {
 
     if (!purchaseEventSent) {
       try {
+        const amount = sessionStorage.getItem("payment_amount") || "0"
+        const email = sessionStorage.getItem("payment_email") || ""
+        const products = JSON.parse(sessionStorage.getItem("payment_products") || "[]")
+
         const productData = {
-          value: Number.parseFloat(searchParams.get("amount") || "0"),
+          value: Number.parseFloat(amount),
           currency: "BRL",
         }
 
@@ -105,8 +109,8 @@ export default function PaymentPage() {
             event_id: eventId,
             value: productData.value,
             currency: productData.currency,
-            products: JSON.parse(searchParams.get("products") || "[]"),
-            email: searchParams.get("email") || "",
+            products: products,
+            email: email,
             payment_id: searchParams.get("payment_id") || "",
           }),
         })
@@ -232,7 +236,7 @@ export default function PaymentPage() {
             )}
 
             <div className="text-center text-sm text-slate-400">
-              <p>A confirmação é automática e você será redirecionado para nosso aplicativo imediatamente!</p>
+              <p>A confirmação é automática e você será redirecionado para nosso aplicativo imediatamente após o pagamento!</p>
             </div>
           </div>
         </Card>
@@ -250,7 +254,7 @@ export default function PaymentPage() {
             <div className="flex items-start gap-3 bg-slate-800 p-3 rounded-lg">
               <Lock className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="text-sm font-semibold text-white">Pagamento Seguro</h4>
+                <h4 className="text-sm font-semibold text-white">Pagamento 100% Seguro</h4>
                 <p className="text-xs text-slate-400">
                   Processamento via Mercado Pago com criptografia de dados bancários
                 </p>
@@ -272,7 +276,7 @@ export default function PaymentPage() {
               <div>
                 <h4 className="text-sm font-semibold text-white">Garantia de Satisfação</h4>
                 <p className="text-xs text-slate-400">
-                  Mais de 20.000 clientes satisfeitos. Suporte disponível para qualquer dúvida
+                  Mais de 5.970 clientes já estão satisfeitos com nossa plataforma. Suporte disponível 24h para qualquer dúvida
                 </p>
               </div>
             </div>
