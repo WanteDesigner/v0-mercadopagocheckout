@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
       country,
       zip_code,
       event_name = "Purchase",
+      event_id, // Accept event_id from client
     } = body
 
     console.log(`[v0] Enviando evento ${event_name} para Facebook Pixel:`, {
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
       currency,
       products,
       payment_id,
+      event_id, // Log event_id
     })
 
     const pixelId = "715632621530184"
@@ -112,6 +114,7 @@ export async function POST(request: NextRequest) {
           {
             event_name: event_name,
             event_time: Math.floor(Date.now() / 1000),
+            event_id: event_id, // Include event_id for deduplication
             action_source: "website",
             event_source_url: request.headers.get("referer") || "https://checkoutmanga.vercel.app",
             user_data: userData,
@@ -159,7 +162,8 @@ export async function POST(request: NextRequest) {
       success: true,
       script: pixelScript,
       facebook_api: facebookResult,
-      message: `Evento ${event_name} Facebook Pixel enviado com content_ids corrigidos`,
+      message: `Evento ${event_name} Facebook Pixel enviado com event_id para deduplicação`,
+      event_id: event_id, // Return event_id in response
       content_ids: contentIds,
       match_quality_data: {
         has_email: !!email,
@@ -170,6 +174,7 @@ export async function POST(request: NextRequest) {
         has_fbp: !!fbp,
         has_ip: !!clientIp,
         has_user_agent: !!userAgent,
+        has_event_id: !!event_id, // Include event_id status
       },
     })
   } catch (error) {
