@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Copy, Clock, ArrowLeft, CheckCircle, Lock, Shield, CheckCircle2 } from "lucide-react"
+import { Copy, Clock, ArrowLeft, CheckCircle, Lock, Shield, CheckCircle2, MessageCircle } from "lucide-react"
 
 export default function PaymentPage() {
   const searchParams = useSearchParams()
@@ -17,6 +17,8 @@ export default function PaymentPage() {
   const [qrCodeBase64, setQrCodeBase64] = useState("")
   const [qrCode, setQrCode] = useState("")
   const [showButton, setShowButton] = useState(false)
+  const [showWhatsAppButton, setShowWhatsAppButton] = useState(false)
+  const [whatsAppCountdown, setWhatsAppCountdown] = useState(70)
 
   useEffect(() => {
     const countdownTimer = setInterval(() => {
@@ -57,6 +59,21 @@ export default function PaymentPage() {
 
     if (qrCodeFromStorage) setQrCode(qrCodeFromStorage)
     if (qrCodeBase64FromStorage) setQrCodeBase64(qrCodeBase64FromStorage)
+  }, [])
+
+  useEffect(() => {
+    const whatsAppTimer = setInterval(() => {
+      setWhatsAppCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(whatsAppTimer)
+          setShowWhatsAppButton(true)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(whatsAppTimer)
   }, [])
 
   const formatTime = (seconds: number) => {
@@ -136,6 +153,13 @@ export default function PaymentPage() {
     setVerificationMessage("Acesso aberto em uma nova aba!")
 
     setTimeout(() => setVerificationMessage(""), 3000)
+  }
+
+  const handleWhatsAppRedirect = () => {
+    const whatsappNumber = "5598984046294"
+    const message = encodeURIComponent("Olá! Gostaria de enviar o comprovante de pagamento do meu pedido.")
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`
+    window.open(whatsappUrl, "_blank")
   }
 
   return (
@@ -231,12 +255,27 @@ export default function PaymentPage() {
               </Button>
             )}
 
+            {showWhatsAppButton && (
+              <Button
+                onClick={handleWhatsAppRedirect}
+                className="w-full font-semibold py-3 bg-green-500 hover:bg-green-600 text-white"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <MessageCircle className="w-5 h-5" />
+                  Enviar Comprovante via WhatsApp
+                </span>
+              </Button>
+            )}
+
             {verificationMessage && !isVerifying && (
               <div className="text-center text-sm text-yellow-400">{verificationMessage}</div>
             )}
 
             <div className="text-center text-sm text-slate-400">
-              <p>A confirmação é automática e você será redirecionado para nosso aplicativo imediatamente após o pagamento!</p>
+              <p>
+                A confirmação é automática e você será redirecionado para nosso aplicativo imediatamente após o
+                pagamento!
+              </p>
             </div>
           </div>
         </Card>
@@ -276,7 +315,8 @@ export default function PaymentPage() {
               <div>
                 <h4 className="text-sm font-semibold text-white">Garantia de Satisfação</h4>
                 <p className="text-xs text-slate-400">
-                  Mais de 5.970 clientes já estão satisfeitos com nossa plataforma. Suporte disponível 24h para qualquer dúvida
+                  Mais de 5.970 clientes já estão satisfeitos com nossa plataforma. Suporte disponível 24h para qualquer
+                  dúvida
                 </p>
               </div>
             </div>
