@@ -26,16 +26,12 @@ export async function POST(request: NextRequest) {
       country,
       zip_code,
       event_name = "Purchase",
-      event_id, // Accept event_id from client
+      event_id,
     } = body
 
-    console.log(`[v0] Enviando evento ${event_name} para Facebook Pixel:`, {
-      value,
-      currency,
-      products,
-      payment_id,
-      event_id, // Log event_id
-    })
+    console.log(`[v0] === INÍCIO DO PROCESSAMENTO DO EVENTO ${event_name} ===`)
+    console.log(`[v0] Event ID recebido:`, event_id)
+    console.log(`[v0] Dados recebidos:`, { email, value, currency, products, payment_id })
 
     const pixelId = "715632621530184"
     const accessToken =
@@ -55,38 +51,44 @@ export async function POST(request: NextRequest) {
 
     const userData: any = {}
 
-    if (email) {
-      userData.em = await hashData(email)
-    }
+    try {
+      if (email) {
+        userData.em = await hashData(email)
+        console.log("[v0] Email hasheado com sucesso")
+      }
 
-    if (phone) {
-      const cleanPhone = phone.replace(/\D/g, "")
-      const phoneWithCountry = cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`
-      userData.ph = await hashData(phoneWithCountry)
-    }
+      if (phone) {
+        const cleanPhone = phone.replace(/\D/g, "")
+        const phoneWithCountry = cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`
+        userData.ph = await hashData(phoneWithCountry)
+      }
 
-    if (first_name) {
-      userData.fn = await hashData(first_name)
-    }
+      if (first_name) {
+        userData.fn = await hashData(first_name)
+      }
 
-    if (last_name) {
-      userData.ln = await hashData(last_name)
-    }
+      if (last_name) {
+        userData.ln = await hashData(last_name)
+      }
 
-    if (city) {
-      userData.ct = await hashData(city)
-    }
+      if (city) {
+        userData.ct = await hashData(city)
+      }
 
-    if (state) {
-      userData.st = await hashData(state)
-    }
+      if (state) {
+        userData.st = await hashData(state)
+      }
 
-    if (country) {
-      userData.country = await hashData(country)
-    }
+      if (country) {
+        userData.country = await hashData(country)
+      }
 
-    if (zip_code) {
-      userData.zp = await hashData(zip_code)
+      if (zip_code) {
+        userData.zp = await hashData(zip_code)
+      }
+    } catch (hashError) {
+      console.error("[v0] Erro ao hashear dados do usuário:", hashError)
+      // Continue even if hashing fails
     }
 
     userData.client_ip_address = clientIp
@@ -104,81 +106,62 @@ export async function POST(request: NextRequest) {
       ? products.filter((p) => p && typeof p === "string").map((p) => p.replace(/[^a-zA-Z0-9_-]/g, "_"))
       : [payment_id || "unknown_product"]
 
+    console.log("[v0] Content IDs gerados:", contentIds)
+    console.log("[v0] User data preparado:", Object.keys(userData))
+
+    const eventPayload = {
+      data: [
+        {
+          event_name: event_name,
+          event_time: Math.floor(Date.now() / 1000),
+          event_id: event_id || `${event_name.toLowerCase()}_${Date.now()}`, // Generate fallback event_id
+          action_source: "website",
+          event_source_url: request.headers.get("referer") || "https://checkoutmanga.vercel.app",
+          user_data: userData,
+          custom_data: {
+            currency: currency || "BRL",
+            value: Number(value) || 0,
+            content_ids: contentIds,
+            content_type: "product",
+            num_items: contentIds.length,
+            order_id: payment_id,
+            predicted_ltv: event_name === "Purchase" ? Number(value) * 1.5 : undefined,
+          },
+        },
+      ],
+      access_token: accessToken,
+    }
+
+    console.log("[v0] Enviando payload para Facebook:", JSON.stringify(eventPayload, null, 2))
+
     const facebookResponse = await fetch(`https://graph.facebook.com/v18.0/${pixelId}/events`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        data: [
-          {
-            event_name: event_name,
-            event_time: Math.floor(Date.now() / 1000),
-            event_id: event_id, // Include event_id for deduplication
-            action_source: "website",
-            event_source_url: request.headers.get("referer") || "https://checkoutmanga.vercel.app",
-            user_data: userData,
-            custom_data: {
-              currency: currency || "BRL",
-              value: value,
-              content_ids: contentIds,
-              content_type: "product",
-              num_items: contentIds.length,
-              order_id: payment_id,
-              predicted_ltv: event_name === "Purchase" ? value * 1.5 : undefined,
-            },
-          },
-        ],
-        access_token: accessToken,
-      }),
+      body: JSON.stringify(eventPayload),
     })
 
     const facebookResult = await facebookResponse.json()
-    console.log(`[v0] Facebook Conversions API ${event_name} response:`, facebookResult)
 
-    const pixelScript = `
-      if (typeof fbq !== 'undefined') {
-        fbq('track', '${event_name}', {
-          value: ${value},
-          currency: '${currency || "BRL"}',
-          content_ids: ${JSON.stringify(contentIds)},
-          content_type: 'product',
-          num_items: ${contentIds.length},
-          ${event_name === "Purchase" ? `order_id: '${payment_id}',` : ""}
-          ${event_name === "Purchase" ? `predicted_ltv: ${value * 1.5}` : ""}
-        });
-        console.log('[v0] Facebook Pixel ${event_name} event sent:', {
-          value: ${value},
-          currency: '${currency || "BRL"}',
-          content_ids: ${JSON.stringify(contentIds)},
-          ${event_name === "Purchase" ? `order_id: '${payment_id}'` : ""}
-        });
-      } else {
-        console.log('[v0] Facebook Pixel not loaded');
-      }
-    `
+    if (!facebookResponse.ok || facebookResult.error) {
+      console.error("[v0] Erro na resposta do Facebook:", facebookResult)
+      throw new Error(`Facebook API Error: ${JSON.stringify(facebookResult)}`)
+    }
+
+    console.log(`[v0] Facebook Conversions API ${event_name} response:`, facebookResult)
+    console.log(`[v0] === FIM DO PROCESSAMENTO DO EVENTO ${event_name} ===`)
 
     return NextResponse.json({
       success: true,
-      script: pixelScript,
       facebook_api: facebookResult,
-      message: `Evento ${event_name} Facebook Pixel enviado com event_id para deduplicação`,
-      event_id: event_id, // Return event_id in response
+      message: `Evento ${event_name} enviado com sucesso`,
+      event_id: event_id,
       content_ids: contentIds,
-      match_quality_data: {
-        has_email: !!email,
-        has_phone: !!phone,
-        has_name: !!(first_name || last_name),
-        has_address: !!(city || state || zip_code),
-        has_fbc: !!fbc,
-        has_fbp: !!fbp,
-        has_ip: !!clientIp,
-        has_user_agent: !!userAgent,
-        has_event_id: !!event_id, // Include event_id status
-      },
     })
   } catch (error) {
-    console.error(`Erro ao processar evento Facebook Pixel:`, error)
+    console.error(`[v0] ERRO CRÍTICO ao processar evento Facebook Pixel:`, error)
+    console.error(`[v0] Stack trace:`, error instanceof Error ? error.stack : "Sem stack trace")
     return NextResponse.json(
       {
         error: "Erro interno do servidor",
