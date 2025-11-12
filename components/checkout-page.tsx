@@ -4,19 +4,20 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Clock, Shield, CheckCircle, AlarmClock, Star } from "lucide-react"
+import { ChevronUp, ChevronDown } from "lucide-react"
 
 export default function CheckoutPage() {
   const [email, setEmail] = useState("")
+  const [name, setName] = useState("")
+  const [phone, setPhone] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
   const [timeLeft, setTimeLeft] = useState(15 * 60)
   const [showPopup, setShowPopup] = useState(false)
   const [currentBuyer, setCurrentBuyer] = useState("")
-  const [downloadsToday, setDownloadsToday] = useState(2847)
   const [usersOnline, setUsersOnline] = useState(47)
   const [statusDownloads, setStatusDownloads] = useState(95)
   const [statusOnline, setStatusOnline] = useState(50)
+  const [isOrderSummaryOpen, setIsOrderSummaryOpen] = useState(true)
   const [selectedBumps, setSelectedBumps] = useState({
     formiga: false,
     picapau: false,
@@ -27,16 +28,13 @@ export default function CheckoutPage() {
     thundercats: false,
     shera: false,
   })
+  const [downloadsToday, setDownloadsToday] = useState(2850) // Declare setDownloadsToday
 
   const buyers = [
-    "João S. acabou de comprar",
-    "Maria L. acabou de comprar",
-    "Pedro R. acabou de comprar",
-    "Ana C. acabou de comprar",
-    "Carlos M. acabou de comprar",
-    "Lucia F. acabou de comprar",
-    "Rafael T. acabou de comprar",
-    "Beatriz O. acabou de comprar",
+    "Helena, Goiânia, GO acabou de comprar.",
+    "João, São Paulo, SP acabou de comprar.",
+    "Maria, Rio de Janeiro, RJ acabou de comprar.",
+    "Pedro, Belo Horizonte, MG acabou de comprar.",
   ]
 
   const testimonials = [
@@ -280,27 +278,104 @@ export default function CheckoutPage() {
       alert("Por favor, insira seu e-mail")
       return
     }
+    if (!name) {
+      alert("Por favor, insira seu nome completo")
+      return
+    }
+    if (!phone) {
+      alert("Por favor, insira seu telefone")
+      return
+    }
 
     setIsProcessing(true)
     console.log("[v0] Iniciando processo de checkout...")
     console.log("[v0] Email do cliente:", email)
 
     try {
-      const products = ["Desenho Completo: A turma de Charlie Brown"]
-      if (selectedBumps.formiga) products.push("Desenho Completo: A Formiga Atômica")
-      if (selectedBumps.thundercats) products.push("Desenho Completo: Thundercats")
-      if (selectedBumps.jetsons) products.push("Desenho Completo: Os Jetsons")
-      if (selectedBumps.picapau) products.push("Desenho Completo – Pica-Pau Coleção Clássica")
-      if (selectedBumps.caverna) products.push("Desenho Completo: A Caverna do Dragão")
-      if (selectedBumps.shera) products.push("Desenho Completo: She-ra")
-      if (selectedBumps.luluzinha) products.push("Desenho Completo – Luluzinha")
-      if (selectedBumps.tom) products.push("Desenho Completo – As aventuras de Tom e Jerry")
+      const productsList = [
+        {
+          name: "Desenho Completo: A turma de Charlie Brown",
+          image: "/images/design-mode/519028_7943916241.jpg",
+          price: 10.0,
+          quantity: 1,
+        },
+      ]
+
+      if (selectedBumps.formiga) {
+        productsList.push({
+          name: "Desenho Completo: A Formiga Atômica",
+          image: "/images/design-mode/formiga-atomica-4(1).jpg",
+          price: 5.0,
+          quantity: 1,
+        })
+      }
+      if (selectedBumps.thundercats) {
+        productsList.push({
+          name: "Desenho Completo: Thundercats",
+          image: "/images/design-mode/unnamed(2).jpg",
+          price: 5.0,
+          quantity: 1,
+        })
+      }
+      if (selectedBumps.jetsons) {
+        productsList.push({
+          name: "Desenho Completo: Os Jetsons",
+          image:
+            "/images/design-mode/MV5BN2NlYjMzYjItODNjYS00ZTEwLThmZmUtM2UwY2NkMzc2YjMxXkEyXkFqcGc@._V1_FMjpg_UX1000_(1).jpg",
+          price: 5.0,
+          quantity: 1,
+        })
+      }
+      if (selectedBumps.picapau) {
+        productsList.push({
+          name: "Desenho Completo – Pica-Pau Coleção Clássica",
+          image: "/images/design-mode/c5b05d90d10be76ed2609e7046db7736(2).jpg",
+          price: 5.0,
+          quantity: 1,
+        })
+      }
+      if (selectedBumps.caverna) {
+        productsList.push({
+          name: "Desenho Completo: A Caverna do Dragão",
+          image: "/images/design-mode/5951896(2).jpg",
+          price: 5.0,
+          quantity: 1,
+        })
+      }
+      if (selectedBumps.shera) {
+        productsList.push({
+          name: "Desenho Completo: She-ra",
+          image: "/images/design-mode/image-0(2).jpeg",
+          price: 5.0,
+          quantity: 1,
+        })
+      }
+      if (selectedBumps.luluzinha) {
+        productsList.push({
+          name: "Desenho Completo – Luluzinha",
+          image: "/images/design-mode/channels4_profile(1).jpg",
+          price: 5.0,
+          quantity: 1,
+        })
+      }
+      if (selectedBumps.tom) {
+        productsList.push({
+          name: "Desenho Completo – As aventuras de Tom e Jerry",
+          image: "/images/design-mode/Tom_and_Jerry.jpeg",
+          price: 5.0,
+          quantity: 1,
+        })
+      }
+
+      const productNames = productsList.map((p) => p.name)
 
       const paymentData = {
         email,
+        name,
+        phone,
         amount: calculateTotal(),
-        description: products.join(" + "),
-        selectedProducts: products,
+        description: productNames.join(" + "),
+        selectedProducts: productNames,
       }
 
       console.log("[v0] Dados do pagamento:", paymentData)
@@ -370,9 +445,9 @@ export default function CheckoutPage() {
             {
               value: totalValue,
               currency: "BRL",
-              content_ids: products.map((p) => p.replace(/[^a-zA-Z0-9_-]/g, "_")),
+              content_ids: productNames.map((p) => p.replace(/[^a-zA-Z0-9_-]/g, "_")),
               content_type: "product",
-              num_items: products.length,
+              num_items: productNames.length,
             },
             { eventID: eventId },
           )
@@ -389,7 +464,7 @@ export default function CheckoutPage() {
             event_id: eventId,
             value: totalValue,
             currency: "BRL",
-            products: products,
+            products: productNames,
             email: email,
             payment_id: data.payment_id,
           }),
@@ -405,7 +480,7 @@ export default function CheckoutPage() {
       sessionStorage.setItem("payment_qr_code", data.qr_code || "")
       sessionStorage.setItem("payment_qr_code_base64", data.qr_code_base64 || "")
       sessionStorage.setItem("payment_email", email)
-      sessionStorage.setItem("payment_products", JSON.stringify(products))
+      sessionStorage.setItem("payment_products", JSON.stringify(productsList))
       sessionStorage.setItem("payment_amount", calculateTotal().toString())
 
       const params = new URLSearchParams({
@@ -425,516 +500,486 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-2 sm:p-4 relative"
-      style={{ backgroundColor: "#14a0b9" }}
-    >
-      <div className="w-full max-w-md space-y-4 sm:space-y-6">
-        <div className="bg-red-600 rounded-lg p-2 sm:p-4 flex items-center justify-center gap-2 sm:gap-3 shadow-lg">
-          <AlarmClock className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0" />
-          <div className="text-white text-center">
-            <span className="text-lg sm:text-xl font-bold">{formatTime(timeLeft)}</span>
-            <span className="ml-2 sm:ml-3 text-xs sm:text-sm leading-7">Aproveite nossa promoção de Natal🎄 </span>
-          </div>
+    <div className="min-h-screen" style={{ backgroundColor: "#00A9BC" }}>
+      {/* Red countdown banner */}
+      <div className="bg-red-600 py-3 px-4 text-center">
+        <div className="max-w-4xl mx-auto">
+          <span className="text-white text-xs sm:text-sm md:text-base">
+            ⏰ Oferta por tempo limitado{" "}
+            <span className="font-bold text-base sm:text-lg ml-2">{formatTime(timeLeft)}</span>
+          </span>
         </div>
+      </div>
 
-        <div className="flex justify-center">
+      {/* Hero image */}
+      <div className="py-6 sm:py-8 md:py-12 px-3 sm:px-4">
+        <div className="max-w-2xl mx-auto">
           <img
-            src="/images/design-mode/519028_7943916241.jpg"
-            alt="Desenho Completo: A Turma de Charlie Brown e Snoopy"
-            className="w-full max-w-sm rounded-lg shadow-lg"
+            src="/images/design-mode/519028_7943916241%20%281%29.jpg"
+            alt="Parabéns - A turma de Charlie Brown"
+            className="w-full rounded-lg shadow-2xl"
           />
         </div>
+      </div>
 
-        <div className="bg-blue-900/50 border border-blue-600 rounded-lg p-2 sm:p-3 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 shadow-lg text-xs sm:text-sm">
-          <div className="flex items-center justify-center gap-4 w-full">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 sm:w-5 sm:h-5 bg-blue-500 rounded flex items-center justify-center flex-shrink-0">
-                <svg className="w-2 h-2 sm:w-3 sm:h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                    clipRule="evenodd"
+      <div className="px-3 sm:px-4 pb-8">
+        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden">
+          {/* Order Summary */}
+          <div className="border-b border-gray-200">
+            <button
+              onClick={() => setIsOrderSummaryOpen(!isOrderSummaryOpen)}
+              className="w-full px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            >
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Resumo do Pedido</h3>
+              {isOrderSummaryOpen ? (
+                <ChevronUp className="w-5 h-5 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-gray-600" />
+              )}
+            </button>
+
+            {isOrderSummaryOpen && (
+              <div className="px-4 sm:px-6 pb-4">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <img
+                    src="/images/design-mode/01.jpg"
+                    alt="Charlie Brown"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded object-cover flex-shrink-0"
                   />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-gray-900 text-xs sm:text-sm">
+                      Pacote Premium: A Turma de Charlie Brown e Snoopy
+                    </h4>
+                    <p className="text-lg sm:text-xl font-bold text-green-600 mt-1">R$ 10,00</p>
+                    <p className="text-xs text-gray-500 mt-1">à vista no PIX</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-200">
+            <div className="flex items-center gap-2 mb-3 sm:mb-4">
+              <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
                 </svg>
               </div>
-              <span className="text-white font-medium whitespace-nowrap">
-                <span className="animate-pulse">{statusDownloads}</span> baixaram hoje
-              </span>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Identificação</h3>
             </div>
 
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-white font-medium whitespace-nowrap">
-                <span className="animate-pulse">{statusOnline}</span> online
-              </span>
+            <div className="space-y-3">
+              <Input
+                type="text"
+                placeholder="Nome completo"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 text-sm sm:text-base"
+              />
+
+              <Input
+                type="email"
+                placeholder="E-mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 text-sm sm:text-base"
+              />
+
+              <div className="flex gap-2">
+                <div className="w-16 sm:w-20">
+                  <Input
+                    type="text"
+                    value="+55"
+                    disabled
+                    className="bg-gray-100 border-gray-300 text-gray-600 text-center text-sm sm:text-base"
+                  />
+                </div>
+                <Input
+                  type="tel"
+                  placeholder="(DDD) 90000-0000"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="flex-1 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 text-sm sm:text-base"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="space-y-2 sm:space-y-3">
-          <Card className="bg-blue-900/50 border-blue-600 text-white p-3 sm:p-4">
-            <div className="flex items-start gap-2 sm:gap-3">
-              <input
-                type="checkbox"
-                checked={selectedBumps.formiga}
-                onChange={() => toggleBump("formiga")}
-                className="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="mb-2">
-                  <p className="text-xs sm:text-sm font-medium mb-2 text-[rgba(255,255,255,1)]">
-                    Últimas cópias disponíveis – garanta antes que saia do ar!
-                  </p>
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold leading-tight text-sm sm:text-base text-[rgba(254,240,1,1)]">
-                      Desenho Completo: A Formiga Atômica
-                    </h3>
-                    <span className="font-bold text-white whitespace-nowrap text-sm sm:text-base">R$ 5,00</span>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <img
-                    src="/images/design-mode/formiga-atomica-4.jpg"
-                    alt="A Formiga Atômica"
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded object-cover flex-shrink-0"
+          <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-200">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">
+              Aproveite essas ofertas especiais!
+            </h2>
+
+            <div className="space-y-5 sm:space-y-6">
+              {/* Luluzinha */}
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedBumps.luluzinha}
+                    onChange={() => toggleBump("luluzinha")}
+                    className="w-4 h-4 sm:w-5 sm:h-5 rounded border-gray-300 flex-shrink-0 mt-1"
                   />
-                  <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-                    A clássica <em>Formiga Atômica</em> voltou com todos os episódios dublados e remasterizados em alta
-                    qualidade. Um verdadeiro tesouro da Hanna-Barbera reunido com carinho para quem cresceu assistindo e
-                    quer reviver cada aventura.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-blue-900/50 border-blue-600 text-white p-3 sm:p-4">
-            <div className="flex items-start gap-2 sm:gap-3">
-              <input
-                type="checkbox"
-                checked={selectedBumps.thundercats}
-                onChange={() => toggleBump("thundercats")}
-                className="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="mb-2">
-                  <p className="text-xs sm:text-sm font-medium mb-2 text-[rgba(255,255,255,1)]">
-                    Complete sua nostalgia com os guerreiros felinos mais lendários da TV!
-                  </p>
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold leading-tight text-sm sm:text-base text-[rgba(255,238,0,1)]">
-                      Desenho Completo: Thundercats
-                    </h3>
-                    <span className="font-bold text-white whitespace-nowrap text-sm sm:text-base">R$ 5,00</span>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <img
-                    src="/images/design-mode/unnamed(1).jpg"
-                    alt="Thundercats"
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded object-cover flex-shrink-0"
-                  />
-                  <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-                    Adicione agora a coleção completa de <em>Thundercats</em> e reviva o grito que marcou gerações:
-                    "Thunder... Thunder... Thundercats, ho!"
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-blue-900/50 border-blue-600 text-white p-3 sm:p-4">
-            <div className="flex items-start gap-2 sm:gap-3">
-              <input
-                type="checkbox"
-                checked={selectedBumps.jetsons}
-                onChange={() => toggleBump("jetsons")}
-                className="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="mb-2">
-                  <p className="text-xs sm:text-sm font-medium mb-2 text-[rgba(255,255,255,1)]">
-                    Disponível por tempo limitado — coleção exclusiva dos Jetsons!
-                  </p>
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold leading-tight text-sm sm:text-base text-[rgba(255,240,0,1)]">
-                      Desenho Completo: Os Jetsons
-                    </h3>
-                    <span className="font-bold text-white whitespace-nowrap text-sm sm:text-base">R$ 5,00</span>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <img
-                    src="/images/design-mode/MV5BN2NlYjMzYjItODNjYS00ZTEwLThmZmUtM2UwY2NkMzc2YjMxXkEyXkFqcGc%40._V1_FMjpg_UX1000_(1).jpg"
-                    alt="Os Jetsons"
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded object-cover flex-shrink-0"
-                  />
-                  <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-                    Todos os episódios de <em>Os Jetsons</em> reunidos em um só lugar, com qualidade impecável e
-                    dublagem clássica. Uma verdadeira viagem no tempo que você não encontra em lugar nenhum.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-blue-900/50 border-blue-600 text-white p-3 sm:p-4">
-            <div className="flex items-start gap-2 sm:gap-3">
-              <input
-                type="checkbox"
-                checked={selectedBumps.picapau}
-                onChange={() => toggleBump("picapau")}
-                className="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="mb-2">
-                  <p className="text-xs sm:text-sm font-medium mb-2 text-[rgba(255,255,255,1)]">
-                    Que tal levar o Pica-Pau mais engraçado da TV?
-                  </p>
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold leading-tight text-sm sm:text-base text-[rgba(254,240,1,1)]">
-                      Desenho Completo - Pica-Pau Coleção Clássica
-                    </h3>
-                    <span className="font-bold text-white whitespace-nowrap text-sm sm:text-base">R$ 5,00</span>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <img
-                    src="/images/design-mode/c5b05d90d10be76ed2609e7046db7736(1).jpg"
-                    alt="Pica-Pau"
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded object-cover flex-shrink-0"
-                  />
-                  <div className="text-xs sm:text-sm text-gray-300 space-y-1">
-                    <p>Você já sabe que não dá pra falar de infância sem lembrar da risada do Pica-Pau 🤪</p>
-                    <p className="font-medium">E agora você pode levar TODAS as fases do personagem mais insano:</p>
-                    <ul className="list-disc list-inside text-xs space-y-0.5 ml-2">
-                      <li>Anos 40, 60, 90</li>
-                      <li>Dublagem original</li>
-                      <li>Episódios raros e especiais</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-blue-900/50 border-blue-600 text-white p-3 sm:p-4">
-            <div className="flex items-start gap-2 sm:gap-3">
-              <input
-                type="checkbox"
-                checked={selectedBumps.caverna}
-                onChange={() => toggleBump("caverna")}
-                className="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="mb-2">
-                  <p className="text-xs sm:text-sm font-medium mb-2 text-[rgba(255,255,255,1)]">
-                    Reviva uma das histórias mais inesquecíveis da TV.
-                  </p>
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold leading-tight text-sm sm:text-base text-[rgba(255,238,0,1)]">
-                      Desenho Completo: A Caverna do Dragão
-                    </h3>
-                    <span className="font-bold text-white whitespace-nowrap text-sm sm:text-base">R$ 5,00</span>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <img
-                    src="/images/design-mode/5951896(1).jpg"
-                    alt="Caverna do Dragão"
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded object-cover flex-shrink-0"
-                  />
-                  <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-                    Adicione <em>A Caverna do Dragão</em> e mergulhe de novo nesse mundo cheio de magia, aventura e
-                    emoção.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-blue-900/50 border-blue-600 text-white p-3 sm:p-4">
-            <div className="flex items-start gap-2 sm:gap-3">
-              <input
-                type="checkbox"
-                checked={selectedBumps.shera}
-                onChange={() => toggleBump("shera")}
-                className="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="mb-2">
-                  <p className="text-xs sm:text-sm font-medium mb-2 text-[rgba(255,255,255,1)]">
-                    Adicione She-Ra à sua coleção e reviva a força, coragem e magia da heroína que inspirou milhões nos
-                    anos 80.
-                  </p>
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold leading-tight text-sm sm:text-base text-[rgba(255,238,0,1)]">
-                      Desenho Completo: She-ra
-                    </h3>
-                    <span className="font-bold text-white whitespace-nowrap text-sm sm:text-base">R$ 5,00</span>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <img
-                    src="/images/design-mode/image-0(1).jpeg"
-                    alt="She-Ra"
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded object-cover flex-shrink-0"
-                  />
-                  <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-                    A princesa do poder está de volta! Todos os episódios da série clássica de <em>She-Ra</em> reunidos
-                    em um só lugar, com imagem e som remasterizados.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-blue-900/50 border-blue-600 text-white p-3 sm:p-4">
-            <div className="flex items-start gap-2 sm:gap-3">
-              <input
-                type="checkbox"
-                checked={selectedBumps.luluzinha}
-                onChange={() => toggleBump("luluzinha")}
-                className="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="mb-2">
-                  <p className="text-xs sm:text-sm font-medium mb-2 text-[rgba(255,255,255,1)]">
-                    Adicione agora o Desenho Completo da Luluzinha
-                  </p>
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold leading-tight text-sm sm:text-base text-[rgba(255,238,0,1)]">
-                      Desenho Completo - Luluzinha
-                    </h3>
-                    <span className="font-bold text-white whitespace-nowrap text-sm sm:text-base">R$ 5,00</span>
-                  </div>
-                </div>
-                <div className="flex gap-3">
                   <img
                     src="/images/design-mode/channels4_profile(1).jpg"
                     alt="Luluzinha"
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded object-cover flex-shrink-0"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded object-cover flex-shrink-0"
                   />
-                  <div className="text-xs sm:text-sm text-gray-300 space-y-1">
-                    <p>
-                      Leve junto uma coleção especial com{" "}
-                      <strong>episódios dublados raros, aberturas antigas e extras nunca exibidos na TV</strong>.
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">Desenho Completo: Luluzinha</h3>
+                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                      Reviva as aventuras de Luluzinha e sua turma — um desenho leve, engraçado e cheio de inocência.
                     </p>
-                    <p>Por apenas R$5,00 a mais, você garante um conteúdo exclusivo para completar sua coleção.</p>
-                    <p className="text-yellow-300 italic text-xs">
-                      Oferta válida apenas neste momento de compra. Após isso, não estará mais disponível.
-                    </p>
+                    <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>
+                    <Button
+                      onClick={() => toggleBump("luluzinha")}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs mt-2 w-full sm:w-auto"
+                    >
+                      Adicionar oferta
+                    </Button>
                   </div>
                 </div>
               </div>
-            </div>
-          </Card>
 
-          <Card className="bg-blue-900/50 border-blue-600 text-white p-3 sm:p-4">
-            <div className="flex items-start gap-2 sm:gap-3">
-              <input
-                type="checkbox"
-                checked={selectedBumps.tom}
-                onChange={() => toggleBump("tom")}
-                className="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="mb-2">
-                  <p className="text-xs sm:text-sm font-medium mb-2 text-[rgba(255,255,255,1)]">
-                    Leve junto a dupla mais engraçada dos desenhos animados!
-                  </p>
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold leading-tight text-sm sm:text-base text-[rgba(255,238,0,1)]">
-                      Desenho Completo: As aventuras de Tom e Jerry
-                    </h3>
-                    <span className="font-bold text-white whitespace-nowrap text-sm sm:text-base">R$ 5,00</span>
-                  </div>
-                </div>
-                <div className="flex gap-3">
+              {/* Tom e Jerry */}
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedBumps.tom}
+                    onChange={() => toggleBump("tom")}
+                    className="w-4 h-4 sm:w-5 sm:h-5 rounded border-gray-300 flex-shrink-0 mt-1"
+                  />
                   <img
                     src="/images/design-mode/Tom_and_Jerry.jpeg"
                     alt="Tom e Jerry"
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded object-cover flex-shrink-0"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded object-cover flex-shrink-0"
                   />
-                  <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-                    Leve junto uma seleção extra com episódios raros, curtas clássicos e momentos especiais que marcaram
-                    gerações.
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">Desenho Completo: Tom e Jerry</h3>
+                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                      Relembre as perseguições e trapalhadas de Tom e Jerry — o desenho mais divertido!
+                    </p>
+                    <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>
+                    <Button
+                      onClick={() => toggleBump("tom")}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs mt-2 w-full sm:w-auto"
+                    >
+                      Adicionar oferta
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Os Jetsons */}
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedBumps.jetsons}
+                    onChange={() => toggleBump("jetsons")}
+                    className="w-4 h-4 sm:w-5 sm:h-5 rounded border-gray-300 flex-shrink-0 mt-1"
+                  />
+                  <img
+                    src="/images/design-mode/MV5BN2NlYjMzYjItODNjYS00ZTEwLThmZmUtM2UwY2NkMzc2YjMxXkEyXkFqcGc%40._V1_FMjpg_UX1000_(1).jpg"
+                    alt="Os Jetsons"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded object-cover flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">Desenho Completo: Os Jetsons</h3>
+                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                      A família mais divertida e futurista da TV! Todos os episódios dublados.
+                    </p>
+                    <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>
+                    <Button
+                      onClick={() => toggleBump("jetsons")}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs mt-2 w-full sm:w-auto"
+                    >
+                      Adicionar oferta
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Formiga Atômica */}
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedBumps.formiga}
+                    onChange={() => toggleBump("formiga")}
+                    className="w-4 h-4 sm:w-5 sm:h-5 rounded border-gray-300 flex-shrink-0 mt-1"
+                  />
+                  <img
+                    src="/images/design-mode/formiga-atomica-4(1).jpg"
+                    alt="Formiga Atômica"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded object-cover flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">
+                      Desenho Completo: A Formiga Atômica
+                    </h3>
+                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                      O herói mais pequeno e mais poderoso da TV voltou! Reviva as aventuras explosivas.
+                    </p>
+                    <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>
+                    <Button
+                      onClick={() => toggleBump("formiga")}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs mt-2 w-full sm:w-auto"
+                    >
+                      Adicionar oferta
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pica-Pau */}
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedBumps.picapau}
+                    onChange={() => toggleBump("picapau")}
+                    className="w-4 h-4 sm:w-5 sm:h-5 rounded border-gray-300 flex-shrink-0 mt-1"
+                  />
+                  <img
+                    src="/images/design-mode/c5b05d90d10be76ed2609e7046db7736(2).jpg"
+                    alt="Pica-Pau"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded object-cover flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">Desenho Completo: Pica-Pau</h3>
+                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                      O pássaro mais maluco do mundo está de volta! Todos os episódios clássicos.
+                    </p>
+                    <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>
+                    <Button
+                      onClick={() => toggleBump("picapau")}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs mt-2 w-full sm:w-auto"
+                    >
+                      Adicionar oferta
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Caverna do Dragão */}
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedBumps.caverna}
+                    onChange={() => toggleBump("caverna")}
+                    className="w-4 h-4 sm:w-5 sm:h-5 rounded border-gray-300 flex-shrink-0 mt-1"
+                  />
+                  <img
+                    src="/images/design-mode/5951896(2).jpg"
+                    alt="Caverna do Dragão"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded object-cover flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">
+                      Desenho Completo: A Caverna do Dragão
+                    </h3>
+                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                      A aventura épica que todos queriam ver o final! Todos os episódios dublados.
+                    </p>
+                    <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>
+                    <Button
+                      onClick={() => toggleBump("caverna")}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs mt-2 w-full sm:w-auto"
+                    >
+                      Adicionar oferta
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Thundercats */}
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedBumps.thundercats}
+                    onChange={() => toggleBump("thundercats")}
+                    className="w-4 h-4 sm:w-5 sm:h-5 rounded border-gray-300 flex-shrink-0 mt-1"
+                  />
+                  <img
+                    src="/images/design-mode/unnamed(2).jpg"
+                    alt="Thundercats"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded object-cover flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">Desenho Completo: Thundercats</h3>
+                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                      Os guerreiros felinos mais épicos dos anos 80! Todos os episódios dublados.
+                    </p>
+                    <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>
+                    <Button
+                      onClick={() => toggleBump("thundercats")}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs mt-2 w-full sm:w-auto"
+                    >
+                      Adicionar oferta
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* She-ra */}
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedBumps.shera}
+                    onChange={() => toggleBump("shera")}
+                    className="w-4 h-4 sm:w-5 sm:h-5 rounded border-gray-300 flex-shrink-0 mt-1"
+                  />
+                  <img
+                    src="/images/design-mode/image-0(2).jpeg"
+                    alt="She-ra"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded object-cover flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">Desenho Completo: She-ra</h3>
+                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                      A heroína que marcou uma era está de volta! Reviva as batalhas épicas.
+                    </p>
+                    <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>
+                    <Button
+                      onClick={() => toggleBump("shera")}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs mt-2 w-full sm:w-auto"
+                    >
+                      Adicionar oferta
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
+
+          <div className="px-4 sm:px-6 py-4 sm:py-6">
+            <div className="space-y-3 sm:space-y-4">
+              {/* Payment Method Selection */}
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Forma de pagamento</label>
+                <div className="border-2 border-cyan-500 rounded-lg p-3 flex items-center justify-center gap-2 bg-cyan-50">
+                  <svg className="w-5 h-5 text-cyan-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                  </svg>
+                  <span className="font-semibold text-gray-900 text-sm sm:text-base">PIX</span>
+                </div>
+              </div>
+
+              {/* Payment Info Box */}
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 sm:p-4">
+                <h4 className="font-semibold text-orange-900 mb-2 text-xs sm:text-sm">
+                  Informações sobre o pagamento via PIX
+                </h4>
+                <p className="text-xs sm:text-sm text-orange-800 mb-1">
+                  O pagamento é instantâneo e liberação imediata
+                </p>
+                <p className="text-xs sm:text-sm text-orange-800 mb-2">
+                  Ao clicar em "Finalizar compra" você será encaminhado para um ambiente seguro
+                </p>
+                <p className="text-sm sm:text-base font-bold text-orange-900">
+                  Valor à vista: R$ {calculateTotal().toFixed(2)}
+                </p>
+              </div>
+
+              {/* Checkout Button */}
+              <Button
+                onClick={handleCheckout}
+                disabled={isProcessing}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 sm:py-4 text-sm sm:text-base transition-all duration-200"
+              >
+                {isProcessing ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm sm:text-base">Gerando PIX...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                    </svg>
+                    <span className="text-sm sm:text-base">FINALIZAR COMPRA</span>
+                  </div>
+                )}
+              </Button>
+
+              {/* Security Badge */}
+              <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-gray-600">
+                <svg className="w-4 h-4 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
+                </svg>
+                <span>Pagamento 100% seguro</span>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <Card className="bg-blue-900/50 border-blue-600 text-white p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-              </div>
-              <span className="font-medium text-sm sm:text-base">PIX - Aprovação Imediata</span>
-            </div>
-            <Badge className="bg-green-600 hover:bg-green-600 text-white text-xs">SEGURO</Badge>
-          </div>
+      <div className="py-8 sm:py-12 px-3 sm:px-4">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-white mb-6 sm:mb-8 px-2">
+            Veja o que nossos clientes estão dizendo
+          </h2>
 
-          <div className="mb-4 p-3 bg-blue-800/30 rounded-lg">
-            <div className="text-xs sm:text-sm text-gray-300 mb-2">Resumo do pedido:</div>
-            <div className="space-y-1 text-xs sm:text-sm">
-              <div className="flex items-center justify-between gap-2">
-                <span className="flex-1">Desenho Completo: A turma de Charlie Brown</span>
-                <span className="font-semibold whitespace-nowrap">R$ 10,00</span>
-              </div>
-              {selectedBumps.formiga && (
-                <div className="flex items-center justify-between gap-2 text-blue-300">
-                  <span className="flex-1">+ A Formiga Atômica</span>
-                  <span className="font-semibold whitespace-nowrap">R$ 5,00</span>
-                </div>
-              )}
-              {selectedBumps.thundercats && (
-                <div className="flex items-center justify-between gap-2 text-blue-300">
-                  <span className="flex-1">+ Thundercats</span>
-                  <span className="font-semibold whitespace-nowrap">R$ 5,00</span>
-                </div>
-              )}
-              {selectedBumps.jetsons && (
-                <div className="flex items-center justify-between gap-2 text-blue-300">
-                  <span className="flex-1">+ Os Jetsons</span>
-                  <span className="font-semibold whitespace-nowrap">R$ 5,00</span>
-                </div>
-              )}
-              {selectedBumps.picapau && (
-                <div className="flex items-center justify-between gap-2 text-blue-300">
-                  <span className="flex-1">+ Pica-Pau Coleção</span>
-                  <span className="font-semibold whitespace-nowrap">R$ 5,00</span>
-                </div>
-              )}
-              {selectedBumps.caverna && (
-                <div className="flex items-center justify-between gap-2 text-blue-300">
-                  <span className="flex-1">+ Caverna do Dragão</span>
-                  <span className="font-semibold whitespace-nowrap">R$ 5,00</span>
-                </div>
-              )}
-              {selectedBumps.shera && (
-                <div className="flex items-center justify-between gap-2 text-blue-300">
-                  <span className="flex-1">+ She-ra</span>
-                  <span className="font-semibold whitespace-nowrap">R$ 5,00</span>
-                </div>
-              )}
-              {selectedBumps.luluzinha && (
-                <div className="flex items-center justify-between gap-2 text-blue-300">
-                  <span className="flex-1">+ Luluzinha</span>
-                  <span className="font-semibold whitespace-nowrap">R$ 5,00</span>
-                </div>
-              )}
-              {selectedBumps.tom && (
-                <div className="flex items-center justify-between gap-2 text-blue-300">
-                  <span className="flex-1">+ Tom e Jerry</span>
-                  <span className="font-semibold whitespace-nowrap">R$ 5,00</span>
-                </div>
-              )}
-              <div className="border-t border-slate-600 pt-2 flex items-center justify-between gap-2 font-bold text-sm sm:text-lg">
-                <span>Total:</span>
-                <span className="whitespace-nowrap">R$ {calculateTotal().toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs sm:text-sm font-medium mb-2">E-mail que deseja Receber o Desenho*</label>
-              <Input
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-blue-800/30 border-blue-600 text-white placeholder:text-slate-400 text-sm"
-              />
-            </div>
-
-            <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
-              <Clock className="w-3 h-3 text-[rgba(255,255,255,1)]" />
-              <span className="text-[rgba(255,255,255,1)]">Processo em 3 segundos</span>
-            </div>
-
-            <Button
-              onClick={handleCheckout}
-              disabled={isProcessing}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 text-sm sm:text-lg transition-all duration-200"
-            >
-              {isProcessing ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Gerando PIX...
-                </div>
-              ) : (
-                <>
-                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  FINALIZAR PEDIDO - R$ {calculateTotal().toFixed(2)}
-                </>
-              )}
-            </Button>
-
-            <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
-              <Shield className="w-3 h-3 text-[rgba(255,255,255,1)]" />
-              <span className="text-center font-light text-[rgba(255,255,255,1)] leading-5">
-                SSL Seguro • PIX Instantâneo • 100% Seguro
-              </span>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="bg-blue-900/50 border-blue-600 text-white p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold mb-4 text-center">
-            Depoimentos de quem já está assistindo👇🏻{" "}
-          </h3>
-          <div className="space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-blue-800/30 rounded-lg">
-                <img
-                  src={testimonial.avatar || "/placeholder.svg"}
-                  alt={testimonial.name}
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="font-medium text-xs sm:text-sm">{testimonial.name}</span>
-                    <span className="text-xs text-gray-400">- {testimonial.location}</span>
+              <Card key={index} className="bg-white p-4 sm:p-6">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <img
+                    src={testimonial.avatar || "/placeholder.svg"}
+                    alt={testimonial.name}
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-bold text-gray-900 text-sm sm:text-base">{testimonial.name}</h4>
+                      <div className="flex gap-0.5 sm:gap-1">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <svg
+                            key={i}
+                            className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                          </svg>
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs sm:text-sm text-gray-600 mb-1">{testimonial.location}</p>
+                    <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">{testimonial.comment}</p>
                   </div>
-                  <div className="flex items-center gap-1 mb-2">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-2 h-2 sm:w-3 sm:h-3 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <p className="text-xs sm:text-sm text-gray-300">{testimonial.comment}</p>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
-        </Card>
-
-        <Card className="bg-blue-900/50 border-blue-600 text-white p-4 sm:p-6">
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-3">
-              <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-green-400" />
-            </div>
-            <h3 className="text-lg sm:text-xl font-bold mb-2 text-green-400">Garantia Incondicional de 7 Dias</h3>
-            <p className="text-xs sm:text-sm mb-4 text-[rgba(255,255,255,1)]">
-              Não gostou? Devolvemos 100% do seu dinheiro sem perguntas. Sua satisfação é nossa prioridade absoluta.
-            </p>
-            <div className="flex items-center justify-center gap-2 text-xs text-green-400">
-              <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span>Reembolso garantido • Sem burocracia • Totalmente seguro</span>
-            </div>
-          </div>
-        </Card>
+        </div>
       </div>
 
       {showPopup && (
-        <div className="fixed bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-auto bg-green-600 text-white px-2 sm:px-3 py-1 sm:py-2 rounded-lg shadow-lg animate-in slide-in-from-left-5 duration-500 z-50 max-w-[240px]">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            <span className="text-xs sm:text-sm font-medium whitespace-nowrap">{currentBuyer}</span>
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-900 text-white px-3 sm:px-4 py-2 sm:py-3 shadow-lg z-50">
+          <div className="max-w-lg mx-auto flex items-center gap-2 sm:gap-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0"></div>
+            <span className="text-xs sm:text-sm font-medium">{currentBuyer}</span>
           </div>
         </div>
       )}
