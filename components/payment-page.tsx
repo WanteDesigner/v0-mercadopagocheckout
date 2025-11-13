@@ -93,6 +93,7 @@ export default function PaymentPage() {
   const sendPurchaseEvent = async () => {
     try {
       const email = sessionStorage.getItem("payment_email") || ""
+      const phone = sessionStorage.getItem("payment_phone") || ""
       const eventId = `purchase_${searchParams.get("payment_id")}_${Date.now()}`
 
       console.log("[v0] Sending Purchase event with event_id:", eventId)
@@ -108,6 +109,15 @@ export default function PaymentPage() {
           { eventID: eventId },
         )
         console.log("[v0] Purchase event sent via client-side fbq")
+      }
+
+      if (typeof window !== "undefined" && (window as any).ttq) {
+        ;(window as any).ttq.track("CompletePayment", {
+          value: amount,
+          currency: "BRL",
+          contents: products.map((p) => ({ content_name: p.name })),
+        })
+        console.log("[v0] Purchase event sent via client-side ttq")
       }
 
       const purchaseResponse = await fetch("/api/facebook/track-purchase", {
@@ -127,9 +137,32 @@ export default function PaymentPage() {
       })
 
       if (!purchaseResponse.ok) {
-        console.error("[v0] Error sending Purchase via API:", await purchaseResponse.text())
+        console.error("[v0] Error sending Purchase via Facebook API:", await purchaseResponse.text())
       } else {
-        console.log("[v0] Purchase event sent via server-side API")
+        console.log("[v0] Purchase event sent via Facebook server-side API")
+      }
+
+      const tiktokResponse = await fetch("/api/tiktok/track-event", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          event_name: "CompletePayment",
+          event_id: eventId,
+          value: amount,
+          currency: "BRL",
+          products: products.map((p) => p.name),
+          email: email,
+          phone: phone,
+          payment_id: searchParams.get("payment_id") || "",
+        }),
+      })
+
+      if (!tiktokResponse.ok) {
+        console.error("[v0] Error sending Purchase via TikTok API:", await tiktokResponse.text())
+      } else {
+        console.log("[v0] Purchase event sent via TikTok server-side API")
       }
 
       setPurchaseEventSent(true)

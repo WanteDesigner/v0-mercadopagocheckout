@@ -43,47 +43,42 @@ export default function CheckoutPage() {
       location: "Brasil",
       rating: 5,
       comment: "Gente, eu chorei assistindo o especial de Natal 😭 parecia que eu tinha 8 anos de novo ❤️",
-      avatar:
-        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Mariana%20Silva-PTUxUhOD7ILGPw5huzMChcRd7vM0cx.jpg",
+      avatar: "/images/mariana-20silva.jpg",
     },
     {
       name: "Fernanda Costa",
       location: "Brasil",
       rating: 5,
       comment: "Mostrei pro meu filho e ele ficou viciado no Snoopy kkk agora ele entende minha infância 😂",
-      avatar:
-        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Fernanda%20Costa-25NTRUQGYcILIgO8jccZlV6xRkXYvC.png",
+      avatar: "/images/fernanda-20costa.png",
     },
     {
       name: "Roberto Oliveira",
       location: "Brasil",
       rating: 5,
       comment: "Revivi tantas lembranças boas… esse desenho tem uma paz que a gente não encontra mais 😌",
-      avatar:
-        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Roberto%20Oliveira-LbFDH1U0LMllrIMqxeH5Bx64t7h2Lv.jpg",
+      avatar: "/images/roberto-20oliveira.jpg",
     },
     {
       name: "Juliana Mendes",
       location: "Brasil",
       rating: 5,
       comment: "Não acredito que achei isso completo e dublado! Que nostalgia 🥹",
-      avatar:
-        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Juliana%20Mendes-n8aR2IwQbjJN3rTHjPbMmhhKziWHeH.jpg",
+      avatar: "/images/juliana-20mendes.jpg",
     },
     {
       name: "Patricia",
       location: "Brasil",
       rating: 5,
       comment: "Eu e meu marido assistindo juntos, parecia que a gente tinha voltado pros anos 90 💛",
-      avatar: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Patricia-c84vW21ws5u0MDfVtgXVEYSkZ93Znc.jpeg",
+      avatar: "/images/patricia.jpeg",
     },
     {
       name: "Camila Rocha",
       location: "Brasil",
       rating: 5,
       comment: "O de Natal continua sendo o melhor, impossível não se emocionar 🎄",
-      avatar:
-        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Camila%20Rocha-HWhLh1ZVP90cP5o6wsC66SOmQ8FTR1.jpg",
+      avatar: "/images/camila-20rocha.jpg",
     },
   ]
 
@@ -219,6 +214,15 @@ export default function CheckoutPage() {
           console.log("[v0] InitiateCheckout event sent via client-side fbq with eventID")
         }
 
+        if (typeof window !== "undefined" && (window as any).ttq) {
+          ;(window as any).ttq.track("InitiateCheckout", {
+            value: totalValue,
+            currency: "BRL",
+            contents: products.map((p) => ({ content_name: p })),
+          })
+          console.log("[v0] InitiateCheckout event sent via client-side ttq")
+        }
+
         await fetch("/api/facebook/track-purchase", {
           method: "POST",
           headers: {
@@ -235,7 +239,25 @@ export default function CheckoutPage() {
           }),
         })
 
-        console.log("[v0] InitiateCheckout event sent via server-side API with event_id")
+        console.log("[v0] InitiateCheckout event sent via Facebook server-side API")
+
+        await fetch("/api/tiktok/track-event", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            event_name: "InitiateCheckout",
+            event_id: eventId,
+            value: totalValue,
+            currency: "BRL",
+            products: products,
+            email: "",
+            payment_id: `checkout_${Date.now()}`,
+          }),
+        })
+
+        console.log("[v0] InitiateCheckout event sent via TikTok server-side API")
 
         sessionStorage.setItem("initiateCheckoutFired", "true")
         sessionStorage.setItem("initiateCheckoutFiredTime", currentTime.toString())
@@ -451,7 +473,16 @@ export default function CheckoutPage() {
             },
             { eventID: eventId },
           )
-          console.log("[v0] AddPaymentInfo event sent via client-side fbq with eventID")
+          console.log("[v0] AddPaymentInfo event sent via client-side fbq")
+        }
+
+        if (typeof window !== "undefined" && (window as any).ttq) {
+          ;(window as any).ttq.track("AddPaymentInfo", {
+            value: totalValue,
+            currency: "BRL",
+            contents: productNames.map((p) => ({ content_name: p })),
+          })
+          console.log("[v0] AddPaymentInfo event sent via client-side ttq")
         }
 
         await fetch("/api/facebook/track-purchase", {
@@ -470,7 +501,26 @@ export default function CheckoutPage() {
           }),
         })
 
-        console.log("[v0] AddPaymentInfo event sent via server-side API with event_id")
+        console.log("[v0] AddPaymentInfo event sent via Facebook server-side API")
+
+        await fetch("/api/tiktok/track-event", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            event_name: "AddPaymentInfo",
+            event_id: eventId,
+            value: totalValue,
+            currency: "BRL",
+            products: productNames,
+            email: email,
+            phone: phone,
+            payment_id: data.payment_id,
+          }),
+        })
+
+        console.log("[v0] AddPaymentInfo event sent via TikTok server-side API")
       } catch (error) {
         console.error("[v0] Erro ao enviar AddPaymentInfo:", error)
       }
