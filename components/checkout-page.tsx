@@ -612,7 +612,7 @@ export default function CheckoutPage() {
 
             <div className="space-y-5 sm:space-y-6">
               {/* Luluzinha */}
-              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[160px] sm:min-h-[180px]">
                 <div className="flex items-start gap-2 sm:gap-3">
                   <input
                     type="checkbox"
@@ -627,7 +627,7 @@ export default function CheckoutPage() {
                   />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">Desenho Completo: Luluzinha</h3>
-                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                    <p className="text-xs text-gray-600">
                       Reviva as aventuras de Luluzinha e sua turma — um desenho leve, engraçado e cheio de inocência.
                     </p>
                     <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>
@@ -644,7 +644,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Tom e Jerry */}
-              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[160px] sm:min-h-[180px]">
                 <div className="flex items-start gap-2 sm:gap-3">
                   <input
                     type="checkbox"
@@ -659,7 +659,7 @@ export default function CheckoutPage() {
                   />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">Desenho Completo: Tom e Jerry</h3>
-                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                    <p className="text-xs text-gray-600">
                       Relembre as perseguições e trapalhadas de Tom e Jerry — o desenho mais divertido!
                     </p>
                     <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>
@@ -676,7 +676,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Os Jetsons */}
-              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[160px] sm:min-h-[180px]">
                 <div className="flex items-start gap-2 sm:gap-3">
                   <input
                     type="checkbox"
@@ -691,7 +691,7 @@ export default function CheckoutPage() {
                   />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">Desenho Completo: Os Jetsons</h3>
-                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                    <p className="text-xs text-gray-600">
                       A família mais divertida e futurista da TV! Todos os episódios dublados.
                     </p>
                     <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>
@@ -708,7 +708,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Formiga Atômica */}
-              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[160px] sm:min-h-[180px]">
                 <div className="flex items-start gap-2 sm:gap-3">
                   <input
                     type="checkbox"
@@ -725,7 +725,7 @@ export default function CheckoutPage() {
                     <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">
                       Desenho Completo: A Formiga Atômica
                     </h3>
-                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                    <p className="text-xs text-gray-600">
                       O herói mais pequeno e mais poderoso da TV voltou! Reviva as aventuras explosivas.
                     </p>
                     <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>
@@ -742,7 +742,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Pica-Pau */}
-              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[160px] sm:min-h-[180px]">
                 <div className="flex items-start gap-2 sm:gap-3">
                   <input
                     type="checkbox"
@@ -757,7 +757,7 @@ export default function CheckoutPage() {
                   />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">Desenho Completo: Pica-Pau</h3>
-                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                    <p className="text-xs text-gray-600">
                       O pássaro mais maluco do mundo está de volta! Todos os episódios clássicos.
                     </p>
                     <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>
@@ -774,7 +774,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Caverna do Dragão */}
-              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[160px] sm:min-h-[180px]">
                 <div className="flex items-start gap-2 sm:gap-3">
                   <input
                     type="checkbox"
@@ -791,7 +791,7 @@ export default function CheckoutPage() {
                     <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">
                       Desenho Completo: A Caverna do Dragão
                     </h3>
-                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                    <p className="text-xs text-gray-600">
                       A aventura épica que todos queriam ver o final! Todos os episódios dublados.
                     </p>
                     <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>
@@ -808,7 +808,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Thundercats */}
-              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[160px] sm:min-h-[180px]">
                 <div className="flex items-start gap-2 sm:gap-3">
                   <input
                     type="checkbox"
@@ -823,7 +823,7 @@ export default function CheckoutPage() {
                   />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">Desenho Completo: Thundercats</h3>
-                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                    <p className="text-xs text-gray-600">
                       Os guerreiros felinos mais épicos dos anos 80! Todos os episódios dublados.
                     </p>
                     <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>
@@ -840,7 +840,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* She-ra */}
-              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[140px] sm:min-h-[160px]">
+              <div className="border border-gray-200 rounded-lg p-3 sm:p-4 min-h-[160px] sm:min-h-[180px]">
                 <div className="flex items-start gap-2 sm:gap-3">
                   <input
                     type="checkbox"
@@ -855,7 +855,7 @@ export default function CheckoutPage() {
                   />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-gray-900 text-xs sm:text-sm mb-1">Desenho Completo: She-ra</h3>
-                    <p className="text-xs text-gray-600 line-clamp-2 sm:line-clamp-3">
+                    <p className="text-xs text-gray-600">
                       A heroína que marcou uma era está de volta! Reviva as batalhas épicas.
                     </p>
                     <p className="text-base sm:text-lg font-bold text-green-600 mt-1">R$ 5,00</p>

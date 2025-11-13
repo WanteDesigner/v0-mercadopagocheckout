@@ -84,22 +84,6 @@ html {
   --font-sans: ${inter.variable};
 }
         `}</style>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              var url_link_redirect_pc = "https://www.crunchyroll.com/pt-br/";
-              function isMobile() {
-                const regex = /Mobi|Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
-                return regex.test(navigator.userAgent);
-              }
-              if (isMobile()) {
-                console.log("Mobile device detected");
-              } else {
-                window.location = url_link_redirect_pc;
-              }
-            `,
-          }}
-        />
       </head>
       <body className={inter.className}>{children}</body>
     </html>

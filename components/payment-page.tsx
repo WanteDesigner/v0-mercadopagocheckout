@@ -3,65 +3,140 @@
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Copy, CheckCircle, MessageCircle, Mail, Phone } from "lucide-react"
+import { Copy, CheckCircle, Mail, Phone } from "lucide-react"
 
 export default function PaymentPage() {
   const searchParams = useSearchParams()
   const [isVerifying, setIsVerifying] = useState(false)
   const [verificationMessage, setVerificationMessage] = useState("")
-  const [isButtonEnabled, setIsButtonEnabled] = useState(false)
-  const [buttonCountdown, setButtonCountdown] = useState(75)
   const [purchaseEventSent, setPurchaseEventSent] = useState(false)
   const [qrCodeBase64, setQrCodeBase64] = useState("")
   const [qrCode, setQrCode] = useState("")
-  const [showButton, setShowButton] = useState(false)
-  const [showWhatsAppButton, setShowWhatsAppButton] = useState(false)
-  const [whatsAppCountdown, setWhatsAppCountdown] = useState(70)
   const [amount, setAmount] = useState(0)
   const [products, setProducts] = useState<any[]>([])
+  const [paymentApproved, setPaymentApproved] = useState(false)
+  const [isCheckingPayment, setIsCheckingPayment] = useState(false)
 
   useEffect(() => {
-    const countdownTimer = setInterval(() => {
-      setButtonCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(countdownTimer)
-          setIsButtonEnabled(true)
-          setShowButton(true)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
+    console.log("[v0] Retrieving payment data from sessionStorage...")
 
-    return () => clearInterval(countdownTimer)
-  }, [])
-
-  useEffect(() => {
     const qrCodeFromStorage = sessionStorage.getItem("payment_qr_code")
     const qrCodeBase64FromStorage = sessionStorage.getItem("payment_qr_code_base64")
     const amountFromStorage = Number.parseFloat(sessionStorage.getItem("payment_amount") || "0") || 0
     const productsFromStorage = JSON.parse(sessionStorage.getItem("payment_products") || "[]")
 
+    console.log("[v0] QR Code retrieved:", qrCodeFromStorage ? "Yes" : "No")
+    console.log(
+      "[v0] QR Code Base64 retrieved:",
+      qrCodeBase64FromStorage ? `Yes (${qrCodeBase64FromStorage.substring(0, 50)}...)` : "No",
+    )
+    console.log("[v0] Amount retrieved:", amountFromStorage)
+    console.log("[v0] Products retrieved:", productsFromStorage)
+
     if (qrCodeFromStorage) setQrCode(qrCodeFromStorage)
-    if (qrCodeBase64FromStorage) setQrCodeBase64(qrCodeBase64FromStorage)
+    if (qrCodeBase64FromStorage) {
+      const base64Data = qrCodeBase64FromStorage.startsWith("data:image")
+        ? qrCodeBase64FromStorage
+        : `data:image/png;base64,${qrCodeBase64FromStorage}`
+      setQrCodeBase64(base64Data)
+      console.log("[v0] QR Code Base64 set successfully")
+    }
     setAmount(amountFromStorage)
     setProducts(productsFromStorage)
   }, [])
 
   useEffect(() => {
-    const whatsAppTimer = setInterval(() => {
-      setWhatsAppCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(whatsAppTimer)
-          setShowWhatsAppButton(true)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
+    const paymentId = searchParams.get("payment_id")
+    if (!paymentId) return
 
-    return () => clearInterval(whatsAppTimer)
-  }, [])
+    const checkPaymentStatus = async () => {
+      try {
+        setIsCheckingPayment(true)
+        console.log("[v0] Checking payment status for:", paymentId)
+
+        const response = await fetch(`/api/pix/check-status?payment_id=${paymentId}`)
+        const data = await response.json()
+
+        console.log("[v0] Payment status:", data.status)
+
+        if (data.status === "approved") {
+          console.log("[v0] Payment approved! Showing confirmation button")
+          setPaymentApproved(true)
+          setIsCheckingPayment(false)
+
+          if (!purchaseEventSent) {
+            await sendPurchaseEvent()
+          }
+          return true
+        }
+
+        return false
+      } catch (error) {
+        console.error("[v0] Error checking payment status:", error)
+        return false
+      }
+    }
+
+    // Check immediately
+    checkPaymentStatus()
+
+    const interval = setInterval(async () => {
+      const approved = await checkPaymentStatus()
+      if (approved) {
+        clearInterval(interval)
+      }
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [searchParams, purchaseEventSent])
+
+  const sendPurchaseEvent = async () => {
+    try {
+      const email = sessionStorage.getItem("payment_email") || ""
+      const eventId = `purchase_${searchParams.get("payment_id")}_${Date.now()}`
+
+      console.log("[v0] Sending Purchase event with event_id:", eventId)
+
+      if (typeof window !== "undefined" && (window as any).fbq) {
+        ;(window as any).fbq(
+          "track",
+          "Purchase",
+          {
+            value: amount,
+            currency: "BRL",
+          },
+          { eventID: eventId },
+        )
+        console.log("[v0] Purchase event sent via client-side fbq")
+      }
+
+      const purchaseResponse = await fetch("/api/facebook/track-purchase", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          event_name: "Purchase",
+          event_id: eventId,
+          value: amount,
+          currency: "BRL",
+          products: products.map((p) => p.name),
+          email: email,
+          payment_id: searchParams.get("payment_id") || "",
+        }),
+      })
+
+      if (!purchaseResponse.ok) {
+        console.error("[v0] Error sending Purchase via API:", await purchaseResponse.text())
+      } else {
+        console.log("[v0] Purchase event sent via server-side API")
+      }
+
+      setPurchaseEventSent(true)
+    } catch (error) {
+      console.error("[v0] Error sending Purchase event:", error)
+    }
+  }
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(qrCode)
@@ -71,64 +146,14 @@ export default function PaymentPage() {
 
   const handlePaymentVerification = async () => {
     setIsVerifying(true)
-    setVerificationMessage("Enviando confirmação...")
-
-    if (!purchaseEventSent) {
-      try {
-        const email = sessionStorage.getItem("payment_email") || ""
-
-        const productData = {
-          value: amount,
-          currency: "BRL",
-        }
-
-        const eventId = `purchase_${searchParams.get("payment_id")}_${Date.now()}`
-
-        if (typeof window !== "undefined" && (window as any).fbq) {
-          ;(window as any).fbq("track", "Purchase", productData, { eventID: eventId })
-        }
-
-        const purchaseResponse = await fetch("/api/facebook/track-purchase", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            event_name: "Purchase",
-            event_id: eventId,
-            value: productData.value,
-            currency: productData.currency,
-            products: products,
-            email: email,
-            payment_id: searchParams.get("payment_id") || "",
-          }),
-        })
-
-        if (!purchaseResponse.ok) {
-          console.error("[v0] Erro ao enviar Purchase via API:", await purchaseResponse.text())
-        }
-
-        setPurchaseEventSent(true)
-      } catch (error) {
-        console.error("[v0] Erro ao enviar Purchase event:", error)
-      }
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
     setVerificationMessage("Abrindo acesso...")
+
     window.open("https://nostalflix.vercel.app", "_blank")
+
     setIsVerifying(false)
     setVerificationMessage("Acesso aberto em uma nova aba!")
 
     setTimeout(() => setVerificationMessage(""), 3000)
-  }
-
-  const handleWhatsAppRedirect = () => {
-    const whatsappNumber = "5598984046294"
-    const message = encodeURIComponent("Olá! Gostaria de enviar o comprovante de pagamento do meu pedido.")
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`
-    window.open(whatsappUrl, "_blank")
   }
 
   return (
@@ -137,7 +162,9 @@ export default function PaymentPage() {
         <div className="bg-white rounded-lg shadow-sm p-6 mb-4">
           <div className="text-center mb-4">
             <h1 className="text-lg font-semibold text-gray-800 mb-1">Pagamento via PIX</h1>
-            <p className="text-sm text-blue-600">Font: 0f1da2948d7b40</p>
+            <p className="text-sm text-blue-600">
+              Font: {searchParams.get("payment_id")?.substring(0, 14) || "0f1da2948d7b40"}
+            </p>
           </div>
 
           <div className="text-center mb-6">
@@ -163,6 +190,13 @@ export default function PaymentPage() {
           </Button>
 
           {verificationMessage && <div className="text-center text-sm text-green-600 mb-4">{verificationMessage}</div>}
+
+          {isCheckingPayment && !paymentApproved && (
+            <div className="text-center text-sm text-gray-600 mb-4 flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span>Aguardando confirmação do pagamento...</span>
+            </div>
+          )}
 
           <div className="mb-6">
             <h3 className="font-semibold text-gray-800 mb-3">Como pagar:</h3>
@@ -216,10 +250,10 @@ export default function PaymentPage() {
           </div>
         </div>
 
-        {showButton && (
+        {paymentApproved && (
           <Button
             onClick={handlePaymentVerification}
-            disabled={!isButtonEnabled || isVerifying}
+            disabled={isVerifying}
             className="w-full font-semibold py-3 bg-green-600 hover:bg-green-700 text-white mb-4"
           >
             {isVerifying ? (
@@ -233,18 +267,6 @@ export default function PaymentPage() {
                 Já realizei o pagamento
               </span>
             )}
-          </Button>
-        )}
-
-        {showWhatsAppButton && (
-          <Button
-            onClick={handleWhatsAppRedirect}
-            className="w-full font-semibold py-3 bg-green-500 hover:bg-green-600 text-white mb-4"
-          >
-            <span className="flex items-center justify-center gap-2">
-              <MessageCircle className="w-5 h-5" />
-              Enviar Comprovante via WhatsApp
-            </span>
           </Button>
         )}
 
