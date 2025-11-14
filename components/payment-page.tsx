@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams } from 'next/navigation'
 import { Button } from "@/components/ui/button"
-import { Copy, CheckCircle, Mail, Phone } from "lucide-react"
+import { Copy, CheckCircle, Mail, Phone } from 'lucide-react'
 
 export default function PaymentPage() {
   const searchParams = useSearchParams()
@@ -111,15 +111,6 @@ export default function PaymentPage() {
         console.log("[v0] Purchase event sent via client-side fbq")
       }
 
-      if (typeof window !== "undefined" && (window as any).ttq) {
-        ;(window as any).ttq.track("CompletePayment", {
-          value: amount,
-          currency: "BRL",
-          contents: products.map((p) => ({ content_name: p.name })),
-        })
-        console.log("[v0] Purchase event sent via client-side ttq")
-      }
-
       const purchaseResponse = await fetch("/api/facebook/track-purchase", {
         method: "POST",
         headers: {
@@ -140,29 +131,6 @@ export default function PaymentPage() {
         console.error("[v0] Error sending Purchase via Facebook API:", await purchaseResponse.text())
       } else {
         console.log("[v0] Purchase event sent via Facebook server-side API")
-      }
-
-      const tiktokResponse = await fetch("/api/tiktok/track-event", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          event_name: "CompletePayment",
-          event_id: eventId,
-          value: amount,
-          currency: "BRL",
-          products: products.map((p) => p.name),
-          email: email,
-          phone: phone,
-          payment_id: searchParams.get("payment_id") || "",
-        }),
-      })
-
-      if (!tiktokResponse.ok) {
-        console.error("[v0] Error sending Purchase via TikTok API:", await tiktokResponse.text())
-      } else {
-        console.log("[v0] Purchase event sent via TikTok server-side API")
       }
 
       setPurchaseEventSent(true)

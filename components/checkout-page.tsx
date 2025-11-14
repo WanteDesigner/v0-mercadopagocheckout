@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
-import { ChevronUp, ChevronDown } from "lucide-react"
+import { ChevronUp, ChevronDown } from 'lucide-react'
 
 export default function CheckoutPage() {
   const [email, setEmail] = useState("")
@@ -214,15 +214,6 @@ export default function CheckoutPage() {
           console.log("[v0] InitiateCheckout event sent via client-side fbq with eventID")
         }
 
-        if (typeof window !== "undefined" && (window as any).ttq) {
-          ;(window as any).ttq.track("InitiateCheckout", {
-            value: totalValue,
-            currency: "BRL",
-            contents: products.map((p) => ({ content_name: p })),
-          })
-          console.log("[v0] InitiateCheckout event sent via client-side ttq")
-        }
-
         await fetch("/api/facebook/track-purchase", {
           method: "POST",
           headers: {
@@ -240,24 +231,6 @@ export default function CheckoutPage() {
         })
 
         console.log("[v0] InitiateCheckout event sent via Facebook server-side API")
-
-        await fetch("/api/tiktok/track-event", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            event_name: "InitiateCheckout",
-            event_id: eventId,
-            value: totalValue,
-            currency: "BRL",
-            products: products,
-            email: "",
-            payment_id: `checkout_${Date.now()}`,
-          }),
-        })
-
-        console.log("[v0] InitiateCheckout event sent via TikTok server-side API")
 
         sessionStorage.setItem("initiateCheckoutFired", "true")
         sessionStorage.setItem("initiateCheckoutFiredTime", currentTime.toString())
@@ -476,15 +449,6 @@ export default function CheckoutPage() {
           console.log("[v0] AddPaymentInfo event sent via client-side fbq")
         }
 
-        if (typeof window !== "undefined" && (window as any).ttq) {
-          ;(window as any).ttq.track("AddPaymentInfo", {
-            value: totalValue,
-            currency: "BRL",
-            contents: productNames.map((p) => ({ content_name: p })),
-          })
-          console.log("[v0] AddPaymentInfo event sent via client-side ttq")
-        }
-
         await fetch("/api/facebook/track-purchase", {
           method: "POST",
           headers: {
@@ -502,25 +466,6 @@ export default function CheckoutPage() {
         })
 
         console.log("[v0] AddPaymentInfo event sent via Facebook server-side API")
-
-        await fetch("/api/tiktok/track-event", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            event_name: "AddPaymentInfo",
-            event_id: eventId,
-            value: totalValue,
-            currency: "BRL",
-            products: productNames,
-            email: email,
-            phone: phone,
-            payment_id: data.payment_id,
-          }),
-        })
-
-        console.log("[v0] AddPaymentInfo event sent via TikTok server-side API")
       } catch (error) {
         console.error("[v0] Erro ao enviar AddPaymentInfo:", error)
       }
