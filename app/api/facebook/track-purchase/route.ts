@@ -109,12 +109,23 @@ export async function POST(request: NextRequest) {
     console.log("[v0] Content IDs gerados:", contentIds)
     console.log("[v0] User data preparado:", Object.keys(userData))
 
+    if (!event_id) {
+      console.error("[v0] ERRO: event_id não fornecido no body da requisição!")
+      return NextResponse.json(
+        {
+          error: "event_id é obrigatório para desduplicação",
+          details: "O parâmetro event_id deve ser enviado no body da requisição",
+        },
+        { status: 400 },
+      )
+    }
+
     const eventPayload = {
       data: [
         {
           event_name: event_name,
           event_time: Math.floor(Date.now() / 1000),
-          event_id: event_id || `${event_name.toLowerCase()}_${Date.now()}`, // Generate fallback event_id
+          event_id: event_id, // Use the event_id directly, no fallback
           action_source: "website",
           event_source_url: request.headers.get("referer") || "https://checkoutmanga.vercel.app",
           user_data: userData,
@@ -132,7 +143,7 @@ export async function POST(request: NextRequest) {
       access_token: accessToken,
     }
 
-    console.log("[v0] Enviando payload para Facebook:", JSON.stringify(eventPayload, null, 2))
+    console.log("[v0] Enviando payload para Facebook com event_id:", event_id) // Confirm event_id in payload
 
     const facebookResponse = await fetch(`https://graph.facebook.com/v18.0/${pixelId}/events`, {
       method: "POST",
