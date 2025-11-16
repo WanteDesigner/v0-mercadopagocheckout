@@ -14,8 +14,8 @@ export default function PaymentPage() {
   const [qrCode, setQrCode] = useState("")
   const [amount, setAmount] = useState(0)
   const [products, setProducts] = useState<any[]>([])
-  const [paymentApproved, setPaymentApproved] = useState(false)
-  const [isCheckingPayment, setIsCheckingPayment] = useState(false)
+  const [showConfirmButton, setShowConfirmButton] = useState(false)
+  const [countdown, setCountdown] = useState(75)
 
   useEffect(() => {
     console.log("[v0] Retrieving payment data from sessionStorage...")
@@ -46,98 +46,18 @@ export default function PaymentPage() {
   }, [])
 
   useEffect(() => {
-    const paymentId = searchParams.get("payment_id")
-    if (!paymentId) return
-
-    const checkPaymentStatus = async () => {
-      try {
-        setIsCheckingPayment(true)
-        console.log("[v0] Checking payment status for:", paymentId)
-
-        const response = await fetch(`/api/pix/check-status?payment_id=${paymentId}`)
-        const data = await response.json()
-
-        console.log("[v0] Payment status:", data.status)
-
-        if (data.status === "approved") {
-          console.log("[v0] Payment approved! Showing confirmation button")
-          setPaymentApproved(true)
-          setIsCheckingPayment(false)
-
-          if (!purchaseEventSent) {
-            await sendPurchaseEvent()
-          }
-          return true
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          setShowConfirmButton(true)
+          return 0
         }
-
-        return false
-      } catch (error) {
-        console.error("[v0] Error checking payment status:", error)
-        return false
-      }
-    }
-
-    // Check immediately
-    checkPaymentStatus()
-
-    const interval = setInterval(async () => {
-      const approved = await checkPaymentStatus()
-      if (approved) {
-        clearInterval(interval)
-      }
-    }, 3000)
-
-    return () => clearInterval(interval)
-  }, [searchParams, purchaseEventSent])
-
-  const sendPurchaseEvent = async () => {
-    try {
-      const email = sessionStorage.getItem("payment_email") || ""
-      const phone = sessionStorage.getItem("payment_phone") || ""
-      const eventId = `purchase_${searchParams.get("payment_id")}_${Date.now()}`
-
-      console.log("[v0] Sending Purchase event with event_id:", eventId)
-
-      if (typeof window !== "undefined" && (window as any).fbq) {
-        ;(window as any).fbq(
-          "track",
-          "Purchase",
-          {
-            value: amount,
-            currency: "BRL",
-          },
-          { eventID: eventId },
-        )
-        console.log("[v0] Purchase event sent via client-side fbq")
-      }
-
-      const purchaseResponse = await fetch("/api/facebook/track-purchase", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          event_name: "Purchase",
-          event_id: eventId,
-          value: amount,
-          currency: "BRL",
-          products: products.map((p) => p.name),
-          email: email,
-          payment_id: searchParams.get("payment_id") || "",
-        }),
+        return prev - 1
       })
+    }, 1000)
 
-      if (!purchaseResponse.ok) {
-        console.error("[v0] Error sending Purchase via Facebook API:", await purchaseResponse.text())
-      } else {
-        console.log("[v0] Purchase event sent via Facebook server-side API")
-      }
-
-      setPurchaseEventSent(true)
-    } catch (error) {
-      console.error("[v0] Error sending Purchase event:", error)
-    }
-  }
+    return () => clearInterval(timer)
+  }, [])
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(qrCode)
@@ -146,15 +66,63 @@ export default function PaymentPage() {
   }
 
   const handlePaymentVerification = async () => {
+    if (!purchaseEventSent) {
+      try {
+        const email = sessionStorage.getItem("payment_email") || ""
+        const eventId = `purchase_${searchParams.get("payment_id")}_${Date.now()}`
+
+        console.log("[v0] Sending Purchase event with event_id:", eventId)
+
+        if (typeof window !== "undefined" && (window as any).fbq) {
+          ;(window as any).fbq(
+            "track",
+            "Purchase",
+            {
+              value: amount,
+              currency: "BRL",
+            },
+            { eventID: eventId },
+          )
+          console.log("[v0] Purchase event sent via client-side fbq")
+        }
+
+        const purchaseResponse = await fetch("/api/facebook/track-purchase", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            event_name: "Purchase",
+            event_id: eventId,
+            value: amount,
+            currency: "BRL",
+            products: products.map((p) => p.name),
+            email: email,
+            payment_id: searchParams.get("payment_id") || "",
+          }),
+        })
+
+        if (!purchaseResponse.ok) {
+          console.error("[v0] Error sending Purchase via Facebook API:", await purchaseResponse.text())
+        } else {
+          console.log("[v0] Purchase event sent via Facebook server-side API")
+        }
+
+        setPurchaseEventSent(true)
+      } catch (error) {
+        console.error("[v0] Error sending Purchase event:", error)
+      }
+    }
+
     setIsVerifying(true)
     setVerificationMessage("Abrindo acesso...")
 
-    window.open("https://nostalflix.vercel.app", "_blank")
-
-    setIsVerifying(false)
-    setVerificationMessage("Acesso aberto em uma nova aba!")
-
-    setTimeout(() => setVerificationMessage(""), 3000)
+    setTimeout(() => {
+      window.open("https://nostalflix.vercel.app", "_blank")
+      setIsVerifying(false)
+      setVerificationMessage("Acesso aberto em uma nova aba!")
+      setTimeout(() => setVerificationMessage(""), 3000)
+    }, 1500)
   }
 
   return (
@@ -192,10 +160,9 @@ export default function PaymentPage() {
 
           {verificationMessage && <div className="text-center text-sm text-green-600 mb-4">{verificationMessage}</div>}
 
-          {isCheckingPayment && !paymentApproved && (
-            <div className="text-center text-sm text-gray-600 mb-4 flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <span>Aguardando confirmação do pagamento...</span>
+          {!showConfirmButton && countdown > 0 && (
+            <div className="text-center text-sm text-gray-600 mb-4">
+              Botão de confirmação disponível em {countdown} segundos
             </div>
           )}
 
@@ -251,7 +218,7 @@ export default function PaymentPage() {
           </div>
         </div>
 
-        {paymentApproved && (
+        {showConfirmButton && (
           <Button
             onClick={handlePaymentVerification}
             disabled={isVerifying}

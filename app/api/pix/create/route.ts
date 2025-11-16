@@ -3,7 +3,6 @@ import { type NextRequest, NextResponse } from "next/server"
 const PIX_KEY = "designerprocurado@gmail.com"
 const MERCHANT_NAME = "NOSTALFLIX"
 const MERCHANT_CITY = "SAO PAULO"
-const MERCADO_PAGO_ACCESS_TOKEN = "APP_USR-2720419685245259-111221-718e950f8f357595034feedcf7f407c3-2581667410"
 
 // Função para calcular CRC16-CCITT
 function crc16(str: string): string {
@@ -93,7 +92,7 @@ export async function POST(request: NextRequest) {
   try {
     const { email, name, phone, amount, description, selectedProducts } = await request.json()
 
-    console.log("[v0] === INÍCIO DA CRIAÇÃO DO PIX VIA MERCADO PAGO ===")
+    console.log("[v0] === INÍCIO DA CRIAÇÃO DO PIX ===")
     console.log("[v0] Email do cliente:", email)
     console.log("[v0] Nome:", name)
     console.log("[v0] Telefone:", phone)
@@ -119,63 +118,28 @@ export async function POST(request: NextRequest) {
       console.error("[v0] Erro ao salvar email na lista:", error)
     }
 
-    // Create payment with Mercado Pago
     const externalReference = `nostalflix_${Date.now()}_${email.replace("@", "_").replace(/\./g, "_")}`
+    const paymentId = `pix_${Date.now()}`
 
-    const idempotencyKey = `${externalReference}_${Math.random().toString(36).substring(2, 15)}`
-
-    const paymentData = {
-      transaction_amount: amount,
-      description: description,
-      payment_method_id: "pix",
-      payer: {
-        email: email,
-        first_name: name || "Cliente",
-        last_name: "",
-        identification: {
-          type: "CPF",
-          number: "00000000000",
-        },
-      },
-      external_reference: externalReference,
-      notification_url: `${request.nextUrl.origin}/api/webhook/mercadopago`,
-    }
-
-    console.log("[v0] Enviando requisição para Mercado Pago...")
-    console.log("[v0] Idempotency Key:", idempotencyKey)
-
-    const mpResponse = await fetch("https://api.mercadopago.com/v1/payments", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`,
-        "X-Idempotency-Key": idempotencyKey,
-      },
-      body: JSON.stringify(paymentData),
-    })
-
-    if (!mpResponse.ok) {
-      const errorText = await mpResponse.text()
-      console.error("[v0] Erro do Mercado Pago:", errorText)
-      throw new Error(`Mercado Pago error: ${mpResponse.status}`)
-    }
-
-    const mpData = await mpResponse.json()
-    console.log("[v0] Resposta do Mercado Pago recebida")
-    console.log("[v0] Payment ID:", mpData.id)
+    console.log("[v0] Gerando PIX payload...")
+    const pixPayload = generatePixPayload(PIX_KEY, MERCHANT_NAME, MERCHANT_CITY, amount, externalReference)
+    
+    console.log("[v0] Gerando QR Code...")
+    const qrCodeBase64 = await generateQRCodeBase64(pixPayload)
 
     const responseData = {
-      payment_id: mpData.id.toString(),
+      payment_id: paymentId,
       external_reference: externalReference,
-      status: mpData.status,
-      qr_code: mpData.point_of_interaction?.transaction_data?.qr_code || "",
-      qr_code_base64: mpData.point_of_interaction?.transaction_data?.qr_code_base64 || "",
+      status: "pending",
+      qr_code: pixPayload,
+      qr_code_base64: qrCodeBase64,
       amount: amount,
       email: email,
       products: selectedProducts,
     }
 
-    console.log("[v0] PIX criado com sucesso via Mercado Pago")
+    console.log("[v0] PIX criado com sucesso")
+    console.log("[v0] Payment ID:", paymentId)
     console.log("[v0] === FIM DA CRIAÇÃO DO PIX ===")
 
     return NextResponse.json(responseData)
